@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>مینی اپ قرعه‌کشی استارز</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'vazir': ['Vazirmatn', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0F172A',
+                        secondary: '#1E293B',
+                        accent: '#3B82F6',
+                        purple: '#8B5CF6',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slide-up 0.3s ease-out',
+                        'fade-in': 'fade-in 0.5s ease-in',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'slide-up': {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        },
+                        'fade-in': {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-vazir bg-gradient-to-br from-primary via-secondary to-slate-900 text-white min-h-screen overflow-x-hidden">
+    
+    <!-- @COMPONENT: WelcomeScreen [initial role selection] -->
+    <div id="welcomeScreen" class="min-h-screen flex flex-col justify-center items-center p-4 relative overflow-hidden">
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-20 right-10 w-32 h-32 bg-accent/20 rounded-full animate-float"></div>
+            <div class="absolute bottom-32 left-8 w-24 h-24 bg-purple/20 rounded-full animate-float" style="animation-delay: 2s;"></div>
+            <div class="absolute top-40 left-16 w-16 h-16 bg-success/20 rounded-full animate-float" style="animation-delay: 4s;"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="relative z-10 max-w-sm w-full space-y-8 animate-fade-in">
+            <!-- Logo/Header -->
+            <div class="text-center space-y-4">
+                <div class="relative">
+                    <div class="w-24 h-24 mx-auto bg-gradient-to-r from-accent to-purple rounded-full flex items-center justify-center shadow-2xl animate-pulse-slow">
+                        <i class="fas fa-gift text-4xl text-white"></i>
+                    </div>
+                </div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-accent to-purple bg-clip-text text-transparent">
+                    دنیای قرعه‌کشی
+                </h1>
+                <p class="text-gray-300 text-lg">به بزرگ‌ترین مجموعه قرعه‌کشی‌های تلگرام خوش آمدید</p>
+            </div>
+
+            <!-- Role Selection Cards -->
+            <div class="space-y-4">
+                <div class="bg-gradient-to-r from-accent/20 to-purple/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6 cursor-pointer hover:scale-105 transition-all duration-300 hover:shadow-2xl hover:from-accent/30 hover:to-purple/30" data-role="participant">
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <div class="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-white text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold">شرکت در قرعه‌کشی</h3>
+                            <p class="text-gray-300 text-sm">مشاهده و شرکت در قرعه‌کشی‌های مختلف</p>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple/20 to-pink-500/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6 cursor-pointer hover:scale-105 transition-all duration-300 hover:shadow-2xl hover:from-purple/30 hover:to-pink-500/30" data-role="channel-manager">
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <div class="w-12 h-12 bg-purple rounded-full flex items-center justify-center">
+                            <i class="fas fa-broadcast-tower text-white text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold">مدیر کانال هستم</h3>
+                            <p class="text-gray-300 text-sm">ارسال قرعه‌کشی‌های کانال خود</p>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terms -->
+            <div class="text-center">
+                <p class="text-xs text-gray-400">
+                    با ادامه، <a href="#" class="text-accent underline">شرایط و قوانین</a> را می‌پذیرید
+                </p>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: WelcomeScreen -->
+
+    <!-- @COMPONENT: ParticipantDashboard [main dashboard for regular users] -->
+    <div id="participantDashboard" class="min-h-screen hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary to-secondary border-b border-white/10 p-4 sticky top-0 z-50 backdrop-blur-sm">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-semibold text-lg" data-bind="user.firstName">کاربر عزیز</h2>
+                        <div class="flex items-center space-x-2 space-x-reverse text-sm">
+                            <span class="text-warning">⭐</span>
+                            <span data-bind="user.points">۲۵۰</span>
+                            <span class="text-gray-400">امتیاز</span>
+                            <span class="bg-success/20 text-success px-2 py-1 rounded-full text-xs" data-bind="user.level">سطح ۲</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors" id="menuBtn">
+                    <i class="fas fa-bars text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="p-4 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gradient-to-r from-accent/20 to-accent/10 rounded-xl p-4 border border-white/10">
+                    <div class="text-center space-y-2">
+                        <i class="fas fa-trophy text-accent text-2xl"></i>
+                        <div class="text-2xl font-bold" data-bind="stats.activeRaffles">۱۲</div>
+                        <div class="text-sm text-gray-300">قرعه‌کشی فعال</div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-success/20 to-success/10 rounded-xl p-4 border border-white/10">
+                    <div class="text-center space-y-2">
+                        <i class="fas fa-check-circle text-success text-2xl"></i>
+                        <div class="text-2xl font-bold" data-bind="stats.joinedRaffles">۸</div>
+                        <div class="text-sm text-gray-300">شرکت کرده‌ام</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="px-4 mb-4">
+            <div class="bg-white/5 rounded-xl p-1 flex">
+                <button class="flex-1 py-2 px-4 rounded-lg bg-accent text-white text-sm font-medium transition-all filter-tab active" data-filter="all">
+                    همه
+                </button>
+                <button class="flex-1 py-2 px-4 rounded-lg text-gray-300 text-sm font-medium transition-all filter-tab hover:text-white" data-filter="stars">
+                    استارز
+                </button>
+                <button class="flex-1 py-2 px-4 rounded-lg text-gray-300 text-sm font-medium transition-all filter-tab hover:text-white" data-filter="premium">
+                    پریمیوم
+                </button>
+                <button class="flex-1 py-2 px-4 rounded-lg text-gray-300 text-sm font-medium transition-all filter-tab hover:text-white" data-filter="mixed">
+                    ترکیبی
+                </button>
+            </div>
+        </div>
+
+        <!-- Raffles List -->
+        <div class="px-4 pb-20 space-y-4" id="rafflesList">
+            <!-- @MAP: raffles.map(raffle => ( -->
+            <div class="bg-gradient-to-r from-white/5 to-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden raffle-card animate-slide-up" data-type="stars">
+                <!-- Prize Header -->
+                <div class="bg-gradient-to-r from-warning to-orange-500 p-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-star text-white"></i>
+                            <span class="text-white font-semibold">۵۰۰ استارز</span>
+                        </div>
+                        <div class="bg-white/20 px-2 py-1 rounded-full">
+                            <span class="text-white text-xs">۲ ساعت باقی مانده</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center space-x-2 space-x-reverse text-sm text-gray-300">
+                        <i class="fas fa-broadcast-tower text-accent"></i>
+                        <span data-bind="raffle.channelName">کانال تکنولوژی</span>
+                        <span>•</span>
+                        <span data-bind="raffle.participantsCount">۱,۲۳۴</span>
+                        <span>شرکت‌کننده</span>
+                    </div>
+
+                    <!-- Required Channels -->
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-400">کانال‌های شرط شرکت:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="https://t.me/channel1" class="bg-accent/20 text-accent px-3 py-1 rounded-full text-xs hover:bg-accent hover:text-white transition-colors" data-mock="true">
+                                @کانال_فناوری
+                            </a>
+                            <a href="https://t.me/channel2" class="bg-accent/20 text-accent px-3 py-1 rounded-full text-xs hover:bg-accent hover:text-white transition-colors" data-mock="true">
+                                @گروه_تکنولوژی
+                            </a>
+                            <a href="https://t.me/channel3" class="bg-accent/20 text-accent px-3 py-1 rounded-full text-xs hover:bg-accent hover:text-white transition-colors" data-mock="true">
+                                @کانال_اخبار
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex space-x-3 space-x-reverse pt-2">
+                        <button class="flex-1 bg-gradient-to-r from-success to-emerald-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-all" data-event="click:joinRaffle">
+                            <i class="fas fa-check-circle ml-2"></i>
+                            شرکت در قرعه‌کشی
+                        </button>
+                        <button class="bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-colors" data-event="click:openFolderList">
+                            <i class="fas fa-folder"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Premium Raffle -->
+            <div class="bg-gradient-to-r from-white/5 to-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden raffle-card animate-slide-up" data-type="premium" style="animation-delay: 0.1s;">
+                <div class="bg-gradient-to-r from-purple to-pink-500 p-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-crown text-white"></i>
+                            <span class="text-white font-semibold">اشتراک پریمیوم ۶ ماهه</span>
+                        </div>
+                        <div class="bg-white/20 px-2 py-1 rounded-full">
+                            <span class="text-white text-xs">۱ روز باقی مانده</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center space-x-2 space-x-reverse text-sm text-gray-300">
+                        <i class="fas fa-broadcast-tower text-accent"></i>
+                        <span>کانال گیمینگ ایران</span>
+                        <span>•</span>
+                        <span>۵,۶۷۸</span>
+                        <span>شرکت‌کننده</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-400">کانال‌های شرط شرکت:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="https://t.me/gamingiran" class="bg-purple/20 text-purple px-3 py-1 rounded-full text-xs hover:bg-purple hover:text-white transition-colors" data-mock="true">
+                                @گیمینگ_ایران
+                            </a>
+                            <a href="https://t.me/esports" class="bg-purple/20 text-purple px-3 py-1 rounded-full text-xs hover:bg-purple hover:text-white transition-colors" data-mock="true">
+                                @اسپورت_الکترونیک
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 space-x-reverse pt-2">
+                        <button class="flex-1 bg-gradient-to-r from-success to-emerald-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-all">
+                            <i class="fas fa-check-circle ml-2"></i>
+                            شرکت در قرعه‌کشی
+                        </button>
+                        <button class="bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-colors">
+                            <i class="fas fa-folder"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mixed Raffle -->
+            <div class="bg-gradient-to-r from-white/5 to-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden raffle-card animate-slide-up" data-type="mixed" style="animation-delay: 0.2s;">
+                <div class="bg-gradient-to-r from-accent to-purple p-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-gift text-white"></i>
+                            <span class="text-white font-semibold">۳۰۰ استارز + پریمیوم ۳ ماهه</span>
+                        </div>
+                        <div class="bg-white/20 px-2 py-1 rounded-full">
+                            <span class="text-white text-xs">۳ ساعت باقی مانده</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center space-x-2 space-x-reverse text-sm text-gray-300">
+                        <i class="fas fa-broadcast-tower text-accent"></i>
+                        <span>کانال تفریحی ایران</span>
+                        <span>•</span>
+                        <span>۲,۹۹۱</span>
+                        <span>شرکت‌کننده</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-400">کانال‌های شرط شرکت:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="https://t.me/entertainment" class="bg-gradient-to-r from-accent/20 to-purple/20 text-accent px-3 py-1 rounded-full text-xs hover:from-accent hover:to-purple hover:text-white transition-colors" data-mock="true">
+                                @تفریحی_ایران
+                            </a>
+                            <a href="https://t.me/fun" class="bg-gradient-to-r from-accent/20 to-purple/20 text-accent px-3 py-1 rounded-full text-xs hover:from-accent hover:to-purple hover:text-white transition-colors" data-mock="true">
+                                @سرگرمی
+                            </a>
+                            <a href="https://t.me/music" class="bg-gradient-to-r from-accent/20 to-purple/20 text-accent px-3 py-1 rounded-full text-xs hover:from-accent hover:to-purple hover:text-white transition-colors" data-mock="true">
+                                @موزیک
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 space-x-reverse pt-2">
+                        <button class="flex-1 bg-gradient-to-r from-success to-emerald-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-all">
+                            <i class="fas fa-check-circle ml-2"></i>
+                            شرکت در قرعه‌کشی
+                        </button>
+                        <button class="bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-colors">
+                            <i class="fas fa-folder"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_MAP )) -->
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-primary to-secondary border-t border-white/10 px-4 py-2">
+            <div class="flex justify-around">
+                <button class="flex flex-col items-center py-2 px-4 text-accent">
+                    <i class="fas fa-home text-lg mb-1"></i>
+                    <span class="text-xs">خانه</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-trophy text-lg mb-1"></i>
+                    <span class="text-xs">قرعه‌کشی‌ها</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-users text-lg mb-1"></i>
+                    <span class="text-xs">دعوت دوستان</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-user text-lg mb-1"></i>
+                    <span class="text-xs">پروفایل</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: ParticipantDashboard -->
+
+    <!-- @COMPONENT: ChannelManagerDashboard [dashboard for channel managers] -->
+    <div id="channelManagerDashboard" class="min-h-screen hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary to-secondary border-b border-white/10 p-4 sticky top-0 z-50">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 bg-purple rounded-full flex items-center justify-center">
+                        <i class="fas fa-broadcast-tower text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-semibold text-lg">پنل مدیر کانال</h2>
+                        <p class="text-sm text-gray-300">ارسال و مدیریت قرعه‌کشی‌ها</p>
+                    </div>
+                </div>
+                <button class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors" id="channelMenuBtn">
+                    <i class="fas fa-bars text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="p-4">
+            <div class="bg-gradient-to-r from-purple/20 to-pink-500/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-4">
+                <div class="text-center space-y-3">
+                    <div class="w-16 h-16 bg-purple rounded-full flex items-center justify-center mx-auto">
+                        <i class="fas fa-cloud-upload-alt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold">ارسال پیام قرعه‌کشی</h3>
+                    <p class="text-gray-300 text-sm">پیام قرعه‌کشی رسمی کانال خود را فوروارد کنید</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-forward text-purple text-2xl mb-2"></i>
+                        <p class="text-sm text-gray-300">برای ارسال، پیام قرعه‌کشی را از کانال خود فوروارد کنید</p>
+                        <p class="text-xs text-gray-400 mt-2">فقط پیام‌های رسمی قرعه‌کشی تلگرام پذیرفته می‌شود</p>
+                    </div>
+
+                    <button class="w-full bg-gradient-to-r from-purple to-pink-500 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-all" data-event="click:openTelegram">
+                        <i class="fas fa-paper-plane ml-2"></i>
+                        باز کردن تلگرام برای فوروارد
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submitted Raffles -->
+        <div class="p-4 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold">قرعه‌کشی‌های ارسال شده</h3>
+                <div class="bg-purple/20 text-purple px-3 py-1 rounded-full text-sm">
+                    ۳ مورد
+                </div>
+            </div>
+
+            <!-- Pending Raffle -->
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-2 h-2 bg-warning rounded-full animate-pulse"></div>
+                        <span class="text-sm text-warning">در انتظار تایید</span>
+                    </div>
+                    <span class="text-xs text-gray-400">۲ ساعت پیش</span>
+                </div>
+                <div class="space-y-2">
+                    <p class="font-medium">قرعه‌کشی ۲۰۰ استارز</p>
+                    <p class="text-sm text-gray-300">کانال تکنولوژی ایران</p>
+                    <div class="flex space-x-2 space-x-reverse">
+                        <span class="bg-warning/20 text-warning px-2 py-1 rounded-full text-xs">استارز</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs">۳ کانال شرط</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Raffle -->
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-2 h-2 bg-success rounded-full"></div>
+                        <span class="text-sm text-success">تایید شده</span>
+                    </div>
+                    <span class="text-xs text-gray-400">۱ روز پیش</span>
+                </div>
+                <div class="space-y-2">
+                    <p class="font-medium">قرعه‌کشی اشتراک پریمیوم</p>
+                    <p class="text-sm text-gray-300">کانال گیمینگ ایران</p>
+                    <div class="flex space-x-2 space-x-reverse">
+                        <span class="bg-purple/20 text-purple px-2 py-1 rounded-full text-xs">پریمیوم</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs">۲ کانال شرط</span>
+                        <span class="bg-success/20 text-success px-2 py-1 rounded-full text-xs">۱,۲۳۴ شرکت‌کننده</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejected Raffle -->
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-2 h-2 bg-danger rounded-full"></div>
+                        <span class="text-sm text-danger">رد شده</span>
+                    </div>
+                    <span class="text-xs text-gray-400">۳ روز پیش</span>
+                </div>
+                <div class="space-y-2">
+                    <p class="font-medium">قرعه‌کشی ۱۰۰ استارز</p>
+                    <p class="text-sm text-gray-300">کانال تفریحی</p>
+                    <div class="flex space-x-2 space-x-reverse">
+                        <span class="bg-warning/20 text-warning px-2 py-1 rounded-full text-xs">استارز</span>
+                        <span class="bg-danger/20 text-danger px-2 py-1 rounded-full text-xs">نامعتبر</span>
+                    </div>
+                    <p class="text-xs text-gray-400 bg-danger/10 p-2 rounded">دلیل رد: پیام قرعه‌کشی رسمی نمی‌باشد</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation for Channel Managers -->
+        <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-primary to-secondary border-t border-white/10 px-4 py-2">
+            <div class="flex justify-around">
+                <button class="flex flex-col items-center py-2 px-4 text-purple">
+                    <i class="fas fa-home text-lg mb-1"></i>
+                    <span class="text-xs">خانه</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-lg mb-1"></i>
+                    <span class="text-xs">ارسال</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-history text-lg mb-1"></i>
+                    <span class="text-xs">تاریخچه</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-user text-lg mb-1"></i>
+                    <span class="text-xs">پروفایل</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: ChannelManagerDashboard -->
+
+    <!-- @COMPONENT: AdminPanel [admin dashboard for managing raffles] -->
+    <div id="adminPanel" class="min-h-screen hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary to-secondary border-b border-white/10 p-4 sticky top-0 z-50">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 bg-danger rounded-full flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-semibold text-lg">پنل مدیریت</h2>
+                        <p class="text-sm text-gray-300">مدیریت قرعه‌کشی‌ها و کاربران</p>
+                    </div>
+                </div>
+                <button class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors" id="adminMenuBtn">
+                    <i class="fas fa-cog text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="p-4 grid grid-cols-2 gap-4">
+            <div class="bg-gradient-to-r from-warning/20 to-orange-500/20 rounded-xl p-4 border border-white/10">
+                <div class="text-center space-y-2">
+                    <i class="fas fa-clock text-warning text-2xl"></i>
+                    <div class="text-2xl font-bold" data-bind="admin.pendingRaffles">۵</div>
+                    <div class="text-sm text-gray-300">در انتظار تایید</div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-success/20 to-emerald-600/20 rounded-xl p-4 border border-white/10">
+                <div class="text-center space-y-2">
+                    <i class="fas fa-check-circle text-success text-2xl"></i>
+                    <div class="text-2xl font-bold" data-bind="admin.approvedRaffles">۲۸</div>
+                    <div class="text-sm text-gray-300">تایید شده</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Raffles -->
+        <div class="p-4 space-y-4">
+            <h3 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-clock text-warning ml-2"></i>
+                قرعه‌کشی‌های در انتظار تایید
+            </h3>
+
+            <!-- Pending Raffle Card -->
+            <div class="bg-gradient-to-r from-white/5 to-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+                <div class="p-4 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <div class="w-2 h-2 bg-warning rounded-full animate-pulse"></div>
+                            <span class="font-semibold">قرعه‌کشی ۵۰۰ استارز</span>
+                        </div>
+                        <span class="text-xs text-gray-400">۳۰ دقیقه پیش</span>
+                    </div>
+
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400">کانال:</span>
+                            <span>@technology_iran</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400">ارسال‌کننده:</span>
+                            <span>@channel_admin</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400">نوع جایزه:</span>
+                            <span class="bg-warning/20 text-warning px-2 py-1 rounded-full text-xs">استارز</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-400">کانال‌های شرط:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-accent/20 text-accent px-2 py-1 rounded-full text-xs">@tech_news</span>
+                            <span class="bg-accent/20 text-accent px-2 py-1 rounded-full text-xs">@programming</span>
+                            <span class="bg-accent/20 text-accent px-2 py-1 rounded-full text-xs">@software</span>
+                        </div>
+                    </div>
+
+                    <!-- Level Selection -->
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400">سطح دسترسی:</label>
+                        <select class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white" data-bind="selectedLevel">
+                            <option value="1">سطح ۱ - همه کاربران</option>
+                            <option value="2">سطح ۲ - کاربران فعال</option>
+                            <option value="3">سطح ۳ - کاربران VIP</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-3 space-x-reverse pt-2">
+                        <button class="flex-1 bg-gradient-to-r from-success to-emerald-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-all" data-event="click:approveRaffle">
+                            <i class="fas fa-check ml-2"></i>
+                            تایید
+                        </button>
+                        <button class="flex-1 bg-gradient-to-r from-danger to-red-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-all" data-event="click:rejectRaffle">
+                            <i class="fas fa-times ml-2"></i>
+                            رد
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Another Pending Raffle -->
+            <div class="bg-gradient-to-r from-white/5 to-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+                <div class="p-4 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <div class="w-2 h-2 bg-warning rounded-full animate-pulse"></div>
+                            <span class="font-semibold">قرعه‌کشی پریمیوم ۶ ماهه</span>
+                        </div>
+                        <span class="text-xs text-gray-400">۱ ساعت پیش</span>
+                    </div>
+
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400">کانال:</span>
+                            <span>@gaming_iran</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400">ارسال‌کننده:</span>
+                            <span>@gaming_admin</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400">نوع جایزه:</span>
+                            <span class="bg-purple/20 text-purple px-2 py-1 rounded-full text-xs">پریمیوم</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-400">کانال‌های شرط:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-purple/20 text-purple px-2 py-1 rounded-full text-xs">@gaming_news</span>
+                            <span class="bg-purple/20 text-purple px-2 py-1 rounded-full text-xs">@esports</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400">سطح دسترسی:</label>
+                        <select class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white">
+                            <option value="1">سطح ۱ - همه کاربران</option>
+                            <option value="2" selected>سطح ۲ - کاربران فعال</option>
+                            <option value="3">سطح ۳ - کاربران VIP</option>
+                        </select>
+                    </div>
+
+                    <div class="flex space-x-3 space-x-reverse pt-2">
+                        <button class="flex-1 bg-gradient-to-r from-success to-emerald-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-all">
+                            <i class="fas fa-check ml-2"></i>
+                            تایید
+                        </button>
+                        <button class="flex-1 bg-gradient-to-r from-danger to-red-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-all">
+                            <i class="fas fa-times ml-2"></i>
+                            رد
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="p-4 space-y-4">
+            <h3 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-cog text-accent ml-2"></i>
+                تنظیمات سیستم
+            </h3>
+
+            <div class="space-y-3">
+                <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-medium">سیستم امتیازدهی</h4>
+                            <p class="text-sm text-gray-400">فعال‌سازی امتیاز برای عضویت در کانال‌ها</p>
+                        </div>
+                        <div class="relative inline-block w-12 h-6">
+                            <input type="checkbox" id="pointsToggle" class="sr-only" checked>
+                            <div class="block bg-success w-12 h-6 rounded-full cursor-pointer"></div>
+                            <div class="dot absolute right-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-medium">سیستم رفرال</h4>
+                            <p class="text-sm text-gray-400">امتیاز برای دعوت دوستان</p>
+                        </div>
+                        <div class="relative inline-block w-12 h-6">
+                            <input type="checkbox" id="referralToggle" class="sr-only" checked>
+                            <div class="block bg-success w-12 h-6 rounded-full cursor-pointer"></div>
+                            <div class="dot absolute right-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Bottom Navigation -->
+        <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-primary to-secondary border-t border-white/10 px-4 py-2">
+            <div class="flex justify-around">
+                <button class="flex flex-col items-center py-2 px-4 text-danger">
+                    <i class="fas fa-shield-alt text-lg mb-1"></i>
+                    <span class="text-xs">مدیریت</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-chart-bar text-lg mb-1"></i>
+                    <span class="text-xs">آمار</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-users text-lg mb-1"></i>
+                    <span class="text-xs">کاربران</span>
+                </button>
+                <button class="flex flex-col items-center py-2 px-4 text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-cog text-lg mb-1"></i>
+                    <span class="text-xs">تنظیمات</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AdminPanel -->
+
+    <!-- @COMPONENT: Menu Modal [side menu for navigation] -->
+    <div id="menuModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+        <div class="fixed right-0 top-0 h-full w-80 bg-gradient-to-b from-primary to-secondary border-l border-white/10 transform translate-x-full transition-transform duration-300" id="menuContent">
+            <div class="p-6 space-y-6">
+                <!-- Menu Header -->
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold">منو</h3>
+                    <button class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors" id="closeMenu">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+
+                <!-- Role Switcher -->
+                <div class="space-y-3">
+                    <h4 class="text-sm text-gray-400">تغییر نقش</h4>
+                    <div class="space-y-2">
+                        <button class="w-full text-right p-3 bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-white transition-colors role-switch" data-role="participant">
+                            <i class="fas fa-users ml-2"></i>
+                            شرکت‌کننده
+                        </button>
+                        <button class="w-full text-right p-3 bg-white/5 text-gray-300 rounded-lg hover:bg-purple/20 hover:text-purple transition-colors role-switch" data-role="channel-manager">
+                            <i class="fas fa-broadcast-tower ml-2"></i>
+                            مدیر کانال
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Menu Items -->
+                <div class="space-y-2">
+                    <button class="w-full text-right p-3 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 hover:text-white transition-colors">
+                        <i class="fas fa-trophy ml-2"></i>
+                        قرعه‌کشی‌های من
+                    </button>
+                    <button class="w-full text-right p-3 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 hover:text-white transition-colors">
+                        <i class="fas fa-users ml-2"></i>
+                        دعوت دوستان
+                    </button>
+                    <button class="w-full text-right p-3 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 hover:text-white transition-colors">
+                        <i class="fas fa-star ml-2"></i>
+                        امتیازات من
+                    </button>
+                    <button class="w-full text-right p-3 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 hover:text-white transition-colors">
+                        <i class="fas fa-question-circle ml-2"></i>
+                        راهنما
+                    </button>
+                </div>
+
+                <!-- Footer -->
+                <div class="pt-6 border-t border-white/10">
+                    <p class="text-xs text-gray-400 text-center">
+                        نسخه ۱.۰.۰ - مینی اپ قرعه‌کشی استارز
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: Menu Modal -->
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-gradient-to-r from-primary to-secondary rounded-xl p-6 border border-white/10">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+                <span class="text-white">در حال بارگذاری...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        
+        (() => {
+            // App State Management
+            let currentRole = null;
+            let currentScreen = 'welcome';
+            
+            // DOM Elements
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const participantDashboard = document.getElementById('participantDashboard');
+            const channelManagerDashboard = document.getElementById('channelManagerDashboard');
+            const adminPanel = document.getElementById('adminPanel');
+            const menuModal = document.getElementById('menuModal');
+            const menuContent = document.getElementById('menuContent');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            // Show loading spinner
+            function showLoading() {
+                loadingSpinner.classList.remove('hidden');
+            }
+            
+            // Hide loading spinner
+            function hideLoading() {
+                loadingSpinner.classList.add('hidden');
+            }
+            
+            // Show specific screen
+            function showScreen(screenName) {
+                // Hide all screens
+                welcomeScreen.classList.add('hidden');
+                participantDashboard.classList.add('hidden');
+                channelManagerDashboard.classList.add('hidden');
+                adminPanel.classList.add('hidden');
+                
+                // Show requested screen
+                switch(screenName) {
+                    case 'welcome':
+                        welcomeScreen.classList.remove('hidden');
+                        break;
+                    case 'participant':
+                        participantDashboard.classList.remove('hidden');
+                        break;
+                    case 'channel-manager':
+                        channelManagerDashboard.classList.remove('hidden');
+                        break;
+                    case 'admin':
+                        adminPanel.classList.remove('hidden');
+                        break;
+                }
+                currentScreen = screenName;
+            }
+            
+            // Role selection handlers
+            document.addEventListener('click', (e) => {
+                const roleCard = e.target.closest('[data-role]');
+                if (roleCard) {
+                    const role = roleCard.getAttribute('data-role');
+                    selectRole(role);
+                }
+            });
+            
+            function selectRole(role) {
+                showLoading();
+                currentRole = role;
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    hideLoading();
+                    
+                    // TODO: Check if user is admin based on Telegram User ID
+                    // For demo purposes, we'll show admin panel if role is 'admin'
+                    if (role === 'admin') {
+                        showScreen('admin');
+                    } else if (role === 'participant') {
+                        showScreen('participant');
+                    } else if (role === 'channel-manager') {
+                        showScreen('channel-manager');
+                    }
+                }, 1000);
+            }
+            
+            // Menu toggle handlers
+            document.getElementById('menuBtn')?.addEventListener('click', () => {
+                menuModal.classList.remove('hidden');
+                setTimeout(() => {
+                    menuContent.style.transform = 'translateX(0)';
+                }, 10);
+            });
+            
+            document.getElementById('channelMenuBtn')?.addEventListener('click', () => {
+                menuModal.classList.remove('hidden');
+                setTimeout(() => {
+                    menuContent.style.transform = 'translateX(0)';
+                }, 10);
+            });
+            
+            document.getElementById('adminMenuBtn')?.addEventListener('click', () => {
+                menuModal.classList.remove('hidden');
+                setTimeout(() => {
+                    menuContent.style.transform = 'translateX(0)';
+                }, 10);
+            });
+            
+            document.getElementById('closeMenu')?.addEventListener('click', closeMenu);
+            
+            menuModal.addEventListener('click', (e) => {
+                if (e.target === menuModal) {
+                    closeMenu();
+                }
+            });
+            
+            function closeMenu() {
+                menuContent.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    menuModal.classList.add('hidden');
+                }, 300);
+            }
+            
+            // Role switching from menu
+            document.addEventListener('click', (e) => {
+                const roleSwitchBtn = e.target.closest('.role-switch');
+                if (roleSwitchBtn) {
+                    const newRole = roleSwitchBtn.getAttribute('data-role');
+                    closeMenu();
+                    selectRole(newRole);
+                }
+            });
+            
+            // Filter tabs functionality
+            document.addEventListener('click', (e) => {
+                const filterTab = e.target.closest('.filter-tab');
+                if (filterTab) {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.filter-tab').forEach(tab => {
+                        tab.classList.remove('active', 'bg-accent', 'text-white');
+                        tab.classList.add('text-gray-300');
+                    });
+                    
+                    // Add active class to clicked tab
+                    filterTab.classList.add('active', 'bg-accent', 'text-white');
+                    filterTab.classList.remove('text-gray-300');
+                    
+                    // Filter raffles based on selected tab
+                    const filter = filterTab.getAttribute('data-filter');
+                    filterRaffles(filter);
+                }
+            });
+            
+            function filterRaffles(filter) {
+                const raffleCards = document.querySelectorAll('.raffle-card');
+                raffleCards.forEach(card => {
+                    const cardType = card.getAttribute('data-type');
+                    if (filter === 'all' || cardType === filter) {
+                        card.style.display = 'block';
+                        card.style.animation = 'slide-up 0.3s ease-out';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Telegram Mini App integration
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                
+                // Initialize Telegram WebApp
+                tg.ready();
+                
+                // Set theme colors
+                tg.setHeaderColor('#0F172A');
+                tg.setBackgroundColor('#0F172A');
+                
+                // TODO: Get user data from Telegram
+                // const user = tg.initDataUnsafe?.user;
+                // if (user) {
+                //     // Update UI with user information
+                //     document.querySelectorAll('[data-bind="user.firstName"]').forEach(el => {
+                //         el.textContent = user.first_name || 'کاربر عزیز';
+                //     });
+                // }
+            }
+            
+            // Haptic feedback for touch interactions
+            function hapticFeedback(type = 'light') {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
+                }
+            }
+            
+            // Add haptic feedback to buttons
+            document.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (button) {
+                    hapticFeedback('light');
+                }
+            });
+            
+            // Simulate real-time updates
+            function simulateRealTimeUpdates() {
+                // TODO: Implement WebSocket connection for real-time updates
+                // This would handle:
+                // - New raffle notifications
+                // - Status updates
+                // - User point changes
+            }
+            
+            // Initialize app
+            function initApp() {
+                // TODO: Check authentication status
+                // TODO: Load user preferences
+                // TODO: Initialize WebSocket connections
+                
+                // For demo, start with welcome screen
+                showScreen('welcome');
+            }
+            
+            // Start the app
+            initApp();
+        })();
+    </script>
+</body>
+</html>

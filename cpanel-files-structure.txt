@@ -1,0 +1,24 @@
+فایل‌های آماده برای آپلود به cPanel:
+
+📁 فایل‌هایی که باید آپلود کنید:
+
+۱. Frontend Files (به public_html):
+   - dist/public/index.html → public_html/index.html
+   - dist/public/assets/ → public_html/assets/ (کل فولدر)
+
+۲. Backend Files (به پوشه api خارج از public_html):
+   - dist/index.js → api/index.js
+   - package-production.json → api/package.json
+   - .env.example → api/.env (با مقادیر واقعی)
+
+۳. Configuration Files:
+   - cpanel-deployment-guide.md (راهنمای نصب)
+
+مراحل آپلود:
+1. فایل‌های dist/public/ را به public_html آپلود کنید
+2. پوشه api بسازید و فایل‌های backend را آپلود کنید
+3. در cPanel، Node.js App بسازید
+4. متغیرهای محیطی را تنظیم کنید
+5. npm install اجرا کنید (از Terminal Node.js App)
+
+توجه: اگر cPanel شما Node.js ساپورت نمی‌کند، نمی‌توانید این روش را استفاده کنید.
