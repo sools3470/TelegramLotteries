@@ -1,0 +1,51 @@
+یک باگ امنیتی جدی وجود دارد . و آن این است که سطح دسترسی مدیر کینگ به سطح دسترسی مدیر سطح یک کاهش یافت.
+
+فکر کنم من راه حل این باگ امنیتی ( مشکل کاهش سطح دسترسی مدیر کینگ ) را بدانم. بیایید این باگ امنیتی مهم را بررسی کنم:
+
+
+Opened server/storage.ts
+
+Agent ran into an error
+
+Executed SQL query SELECT * FROM users WHERE telegram_id = '128787773' ORDER BY created_at DESC;
+
+Searched for "I need to find where the King Admin's adminLevel was incorrectly modified during authentication or user creation to understand the security bug that changed level 0 to level 1"
+عالی! حالا دقیقاً باگ امنیتی را پیدا کردم. بیایید کد مشکل‌ساز را بررسی کنم:
+
+
+Opened server/routes.ts
+علت باگ امنیتی مدیر کینگ:
+مشکل اصلی در خط 436 در فایل server/routes.ts بود:
+
+adminLevel: existingUser ? existingUser.adminLevel : 1,
+توضیح کامل باگ:
+
+هنگام authentication: وقتی مدیر کینگ (ID: 128787773) به سیستم وارد می‌شد، کد به این صورت عمل می‌کرد:
+
+اگر کاربر قبلاً وجود داشت → adminLevel حفظ می‌شد
+اگر کاربر وجود نداشت → به طور پیش‌فرض adminLevel = 1 تنظیم می‌شد
+مشکل امنیتی: برای اولین بار یا هنگام reset شدن اطلاعات:
+
+حتی اگر telegramId در لیست admins بود
+حتی اگر isUserAdmin() true برمی‌گرداند
+باز هم adminLevel به 1 تنظیم می‌شد نه 0
+نتیجه: مدیر کینگ به Level 1 Admin تبدیل شد و دسترسی به مدیریت مدیران را از دست داد
+
+راه حل امنیتی که باید اعمال شود:
+
+// برای King Admin hardcoded check
+adminLevel: existingUser ? existingUser.adminLevel : 
+  (authData.telegramId === "128787773" ? 0 : 
+   authData.telegramId && await storage.isUserAdmin(authData.telegramId) ? 1 : 2)
+این باگ خطرناک بود چون:
+
+می‌توانست دسترسی اصلی سیستم را از بین ببرد
+هیچ امکان بازگردانی خودکار وجود نداشت
+سلسله مراتب امنیتی را نقض می‌کرد
+برای جلوگیری از تکرار:
+
+King Admin ID باید hardcoded و محافظت شود
+Default adminLevel برای admins جدید باید 1 باشد نه پایین‌تر
+Log تغییرات adminLevel برای monitoring
+
+این باگ امنیتی را به طور کامل برطرف کن اما در نظر داشته باش که هیچ تغییری در ظاهر پنل مدیرت اتفاق نیفته و ظاهر و قالب بخش پنل مدیریت هیچ تغییری نکنه و دست نخورده به همین صورت باقی بمون.

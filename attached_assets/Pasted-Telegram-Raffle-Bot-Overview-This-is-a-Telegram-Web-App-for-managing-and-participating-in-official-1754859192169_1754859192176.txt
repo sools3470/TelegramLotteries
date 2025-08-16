@@ -1,0 +1,58 @@
+Telegram Raffle Bot
+Overview
+This is a Telegram Web App for managing and participating in official Telegram raffles. The application provides a comprehensive platform where users can view approved raffle messages, channel managers can submit raffle content, and administrators can moderate submissions. The system features role-based access control with three distinct user types: regular users (participants), channel managers (raffle submitters), and administrators (moderators).
+
+User Preferences
+Preferred communication style: Simple, everyday language.
+
+System Architecture
+Frontend Architecture
+Framework: React with TypeScript using Vite as the build tool
+UI Components: Shadcn/ui component library built on Radix UI primitives
+Styling: Tailwind CSS with Persian/RTL support using Vazir font
+State Management: TanStack Query for server state management
+Routing: Wouter for lightweight client-side routing
+Forms: React Hook Form with Zod validation
+Telegram Integration: Native Telegram WebApp JavaScript SDK for seamless in-app experience
+Backend Architecture
+Runtime: Node.js with Express.js framework
+Database: PostgreSQL with Drizzle ORM for type-safe database operations
+API Design: RESTful API with role-based endpoint protection
+Session Management: Express sessions with PostgreSQL session store
+Development: Hot module replacement via Vite in development mode
+Database Schema Design
+Users Table: Stores Telegram user data, roles (admin/user/channel_manager), points, levels, and referral information
+Raffles Table: Contains raffle submissions with status tracking (pending/approved/rejected), channel information, prize descriptions, and approval workflow
+User Seen Raffles: Junction table tracking which users have viewed specific raffles for engagement metrics
+Enums: PostgreSQL enums for user roles and raffle statuses ensuring data integrity
+Authentication & Authorization
+Telegram-based Authentication: Uses Telegram WebApp user data for seamless login without separate credentials
+Role-based Access Control: Three-tier permission system with distinct capabilities per role
+Admin Identification: Admin users identified by Telegram ID whitelist from environment variables
+Role Selection: New users choose between regular user or channel manager roles during onboarding
+Data Flow & Business Logic
+Raffle Submission Workflow: Channel managers submit raffle content → Admin review and approval → Display to appropriate user levels
+Level-based Content Access: Raffles assigned minimum level requirements controlling user visibility
+Duplicate Prevention: System checks prevent duplicate raffle submissions using channel ID and message ID
+Engagement Tracking: User interactions with raffles recorded for analytics and user progression
+External Dependencies
+Database & Infrastructure
+Neon Database: Serverless PostgreSQL database with connection pooling
+Drizzle Kit: Database migration and schema management tools
+Telegram Platform
+Telegram WebApp API: Official Telegram Web App JavaScript SDK for user authentication and platform integration
+Telegram Bot API: For potential bot functionality and message forwarding capabilities
+UI & Design System
+Radix UI: Headless component primitives for accessibility and customization
+Tailwind CSS: Utility-first CSS framework with custom Persian/RTL configuration
+Lucide React: Icon library for consistent iconography
+Vazir Font: Persian web font for proper RTL language support
+Development & Build Tools
+Vite: Fast build tool with hot module replacement and optimized production builds
+TypeScript: Type safety across frontend and backend with shared type definitions
+ESBuild: Fast JavaScript bundler for server-side code compilation
+PostCSS: CSS processing with Tailwind and Autoprefixer plugins
+Validation & Forms
+Zod: Runtime type validation for API requests and form data
+React Hook Form: Performant form library with validation integration
+Drizzle-Zod: Automatic Zod schema generation from database schemas
