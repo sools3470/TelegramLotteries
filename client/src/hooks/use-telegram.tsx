@@ -25,10 +25,36 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const telegramUser = telegramWebApp.getUser();
-    setUser(telegramUser);
-    setIsLoading(false);
-  }, []);
+  let isMounted = true;
+  const startedAt = Date.now();
+
+  const tryRead = () => {
+    const u =
+      (typeof window !== "undefined" &&
+        window.Telegram?.WebApp?.initDataUnsafe?.user) ||
+      null;
+    if (isMounted && u?.id) {
+      setUser(u);
+      setIsLoading(false);
+      return true;
+    }
+    return false;
+  };
+
+  if (tryRead()) return;
+
+  const iv = setInterval(() => {
+    if (tryRead() || Date.now() - startedAt > 5000) {
+      clearInterval(iv);
+      if (isMounted) setIsLoading(false);
+    }
+  }, 150);
+
+  return () => {
+    isMounted = false;
+    clearInterval(iv);
+  };
+}, []);
 
   const showAlert = (message: string) => {
     return telegramWebApp.showAlert(message);
@@ -59,7 +85,10 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
   };
 
   // Check if in Telegram environment
-  const isInTelegram = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
+  const isInTelegram =
+  typeof window !== "undefined" &&
+  !!window.Telegram?.WebApp &&
+  !!user?.id;
 
   return (
     <TelegramContext.Provider
