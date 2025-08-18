@@ -1827,22 +1827,25 @@ async function registerRoutes(app2) {
       res.status(500).json({ message: "Server error", error });
     }
   });
+  const telegramAuthSchema = z2.object({
+    telegramId: z2.string().min(1),
+    firstName: z2.string().optional(),
+    lastName: z2.string().optional(),
+    profileImageUrl: z2.string().url().optional()
+  });
   app2.post("/api/auth/telegram", async (req, res) => {
     try {
-      const authData = upsertUserSchema.parse(req.body);
-      const existingUser = authData.telegramId ? await storage.getUserByTelegramId(authData.telegramId) : null;
+      const body = telegramAuthSchema.parse(req.body);
+      const existingUser = await storage.getUserByTelegramId(body.telegramId);
       const userData = {
-        ...authData,
+        telegramId: body.telegramId,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        profileImageUrl: body.profileImageUrl,
         authMethod: "telegram",
         // Preserve existing user type and adminLevel if user exists, otherwise determine from admin status
-        userType: existingUser ? existingUser.userType : authData.telegramId && await storage.isUserAdmin(authData.telegramId) ? "bot_admin" : "regular",
-        adminLevel: existingUser ? existingUser.adminLevel : (
-          // CRITICAL SECURITY: King Admin gets level 0 (hardcoded)
-          isKingAdmin(authData.telegramId || "") ? 0 : (
-            // Other admins get level 1 by default
-            authData.telegramId && await storage.isUserAdmin(authData.telegramId) ? 1 : 2
-          )
-        )
+        userType: existingUser ? existingUser.userType : await storage.isUserAdmin(body.telegramId) ? "bot_admin" : "regular",
+        adminLevel: existingUser ? existingUser.adminLevel : isKingAdmin(body.telegramId) ? 0 : await storage.isUserAdmin(body.telegramId) ? 1 : 2
       };
       const user = await storage.upsertUser(userData);
       res.json(user);
@@ -1850,11 +1853,20 @@ async function registerRoutes(app2) {
       res.status(400).json({ message: "Invalid authentication data", error });
     }
   });
+  const gmailAuthSchema = z2.object({
+    email: z2.string().email(),
+    firstName: z2.string().optional(),
+    lastName: z2.string().optional(),
+    profileImageUrl: z2.string().url().optional()
+  });
   app2.post("/api/auth/gmail", async (req, res) => {
     try {
-      const authData = upsertUserSchema.parse(req.body);
+      const body = gmailAuthSchema.parse(req.body);
       const user = await storage.upsertUser({
-        ...authData,
+        email: body.email,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        profileImageUrl: body.profileImageUrl,
         authMethod: "gmail"
       });
       res.json(user);

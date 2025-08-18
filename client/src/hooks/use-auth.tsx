@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTelegram } from "./use-telegram";
 import { apiRequest } from "@/lib/queryClient";
@@ -24,6 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { user: telegramUser, isInTelegram } = useTelegram();
   const [authMethod, setAuthMethod] = useState<"telegram" | "gmail" | "guest" | null>(null);
   const queryClient = useQueryClient();
+  const didAutoLoginRef = useRef(false);
   
   // Check if user exists in database
   const { data: user, isLoading, refetch } = useQuery({
@@ -62,10 +63,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Auto-login with Telegram if available
   useEffect(() => {
-    if (telegramUser && !user && !isLoading) {
+    if (isInTelegram && telegramUser && !user && !isLoading && !didAutoLoginRef.current) {
+      didAutoLoginRef.current = true;
       loginWithTelegram();
     }
-  }, [telegramUser, user, isLoading]);
+  }, [isInTelegram, telegramUser, user, isLoading]);
 
   // Determine auth method
   useEffect(() => {
@@ -84,11 +86,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: `telegram_${telegramUser.id}`,
           telegramId: telegramUser.id.toString(),
           firstName: telegramUser.first_name,
           lastName: telegramUser.last_name || "",
-          username: telegramUser.username,
           profileImageUrl: undefined, // Not available in telegram user type
         }),
       });
@@ -116,7 +116,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: `gmail_${email}`,
           email,
           firstName,
           lastName,

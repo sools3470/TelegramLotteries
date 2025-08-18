@@ -547,43 +547,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Authentication routes
+  // Accept only minimal required fields for each provider to avoid strict schema issues
+  const telegramAuthSchema = z.object({
+    telegramId: z.string().min(1),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    profileImageUrl: z.string().url().optional(),
+  });
+
   app.post("/api/auth/telegram", async (req, res) => {
     try {
-      const authData = upsertUserSchema.parse(req.body);
-      
+      const body = telegramAuthSchema.parse(req.body);
+
       // Check if user already exists in database
-      const existingUser = authData.telegramId ? await storage.getUserByTelegramId(authData.telegramId) : null;
-      
+      const existingUser = await storage.getUserByTelegramId(body.telegramId);
+
       const userData = {
-        ...authData,
+        telegramId: body.telegramId,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        profileImageUrl: body.profileImageUrl,
         authMethod: "telegram" as const,
         // Preserve existing user type and adminLevel if user exists, otherwise determine from admin status
-        userType: existingUser ? existingUser.userType : 
-          (authData.telegramId && await storage.isUserAdmin(authData.telegramId) ? "bot_admin" as const : "regular" as const),
-        adminLevel: existingUser ? existingUser.adminLevel : 
-          // CRITICAL SECURITY: King Admin gets level 0 (hardcoded)
-          (isKingAdmin(authData.telegramId || "") ? 0 : 
-           // Other admins get level 1 by default
-           (authData.telegramId && await storage.isUserAdmin(authData.telegramId) ? 1 : 2)),
-      };
-      
-      const user = await storage.upsertUser(userData);
-      
+        userType: existingUser
+          ? existingUser.userType
+          : (await storage.isUserAdmin(body.telegramId))
+            ? ("bot_admin" as const)
+            : ("regular" as const),
+        adminLevel: existingUser
+          ? existingUser.adminLevel
+          : isKingAdmin(body.telegramId)
+            ? 0
+            : (await storage.isUserAdmin(body.telegramId))
+              ? 1
+              : 2,
+      } as const;
+
+      const user = await storage.upsertUser(userData as any);
+
       res.json(user);
     } catch (error) {
       res.status(400).json({ message: "Invalid authentication data", error });
     }
   });
 
+  const gmailAuthSchema = z.object({
+    email: z.string().email(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    profileImageUrl: z.string().url().optional(),
+  });
+
   app.post("/api/auth/gmail", async (req, res) => {
     try {
-      const authData = upsertUserSchema.parse(req.body);
-      
+      const body = gmailAuthSchema.parse(req.body);
+
       const user = await storage.upsertUser({
-        ...authData,
+        email: body.email,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        profileImageUrl: body.profileImageUrl,
         authMethod: "gmail",
-      });
-      
+      } as any);
+
       res.json(user);
     } catch (error) {
       res.status(400).json({ message: "Invalid authentication data", error });
