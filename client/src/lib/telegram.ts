@@ -78,16 +78,20 @@ export class TelegramWebApp {
       this.webApp.expand();
     } else {
       // Fallback for development/testing
-      this.webApp = {
-        initData: '',
-        initDataUnsafe: {
-          user: {
+      const isDev = typeof import.meta !== "undefined" && (import.meta as any).env?.DEV;
+
+  this.webApp = {
+    initData: "",
+    initDataUnsafe: {
+      user: isDev
+        ? {
             id: 123456789,
-            first_name: 'Test',
-            last_name: 'User',
-            username: 'testuser',
+            first_name: "Test",
+            last_name: "User",
+            username: "testuser",
           }
-        },
+        : undefined,
+    },
         themeParams: {
           bg_color: '#ffffff',
           text_color: '#000000',
