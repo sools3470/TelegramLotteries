@@ -1,13 +1,12 @@
 import express from "express";
 import { registerRoutes } from "./routes";
-import { setupVite } from "./vite";
+import { setupVite, serveStatic } from "./vite";
 // Dynamically import scheduler to avoid issues during startup
 // import MembershipScheduler from './services/membershipScheduler';
 
 const app = express();
 
 app.use(express.json());
-app.use(express.static("dist"));
 
 (async () => {
   const server = await registerRoutes(app);
