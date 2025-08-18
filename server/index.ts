@@ -11,9 +11,15 @@ app.use(express.static("dist"));
 
 (async () => {
   const server = await registerRoutes(app);
-  
-  // Setup Vite
-  await setupVite(app, server);
+
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction) {
+    // Serve prebuilt client assets in production
+    serveStatic(app);
+  } else {
+    // Setup Vite middleware in development for HMR and dev server features
+    await setupVite(app, server);
+  }
 
   // Initialize membership scheduler if bot token is available
   if (process.env.BOT_TOKEN) {
