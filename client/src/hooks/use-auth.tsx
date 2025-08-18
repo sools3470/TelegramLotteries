@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTelegram } from "./use-telegram";
 import { apiRequest } from "@/lib/queryClient";
@@ -23,6 +23,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const { user: telegramUser, isInTelegram } = useTelegram();
   const [authMethod, setAuthMethod] = useState<"telegram" | "gmail" | "guest" | null>(null);
+  const didAutoLoginRef = useRef(false);
   const queryClient = useQueryClient();
   
   // Check if user exists in database
@@ -62,10 +63,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Auto-login with Telegram if available
   useEffect(() => {
-    if (telegramUser && !user && !isLoading) {
-      loginWithTelegram();
-    }
-  }, [telegramUser, user, isLoading]);
+  if (isInTelegram && telegramUser && !user && !isLoading && !didAutoLoginRef.current) {
+    didAutoLoginRef.current = true;
+    loginWithTelegram();
+  }
+}, [isInTelegram, telegramUser, user, isLoading]);
 
   // Determine auth method
   useEffect(() => {
