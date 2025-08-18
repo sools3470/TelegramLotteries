@@ -1,19 +1,24 @@
 import express from "express";
 import { registerRoutes } from "./routes";
-import { setupVite } from "./vite";
+import { setupVite, serveStatic } from "./vite";
 // Dynamically import scheduler to avoid issues during startup
 // import MembershipScheduler from './services/membershipScheduler';
 
 const app = express();
 
 app.use(express.json());
-app.use(express.static("dist"));
 
 (async () => {
   const server = await registerRoutes(app);
-  
-  // Setup Vite
-  await setupVite(app, server);
+
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction) {
+    // Serve prebuilt client assets in production
+    serveStatic(app);
+  } else {
+    // Setup Vite middleware in development for HMR and dev server features
+    await setupVite(app, server);
+  }
 
   // Initialize membership scheduler if bot token is available
   if (process.env.BOT_TOKEN) {
