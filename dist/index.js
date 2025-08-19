@@ -330,13 +330,14 @@ var init_schema = __esm({
 });
 
 // server/db.ts
-import { Pool } from "pg";
+import pkg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
-var pool, db;
+var Pool, pool, db;
 var init_db = __esm({
   "server/db.ts"() {
     "use strict";
     init_schema();
+    ({ Pool } = pkg);
     if (!process.env.DATABASE_URL) {
       throw new Error(
         "DATABASE_URL must be set. Did you forget to provision a database?"
