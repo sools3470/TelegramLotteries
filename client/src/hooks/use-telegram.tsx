@@ -44,11 +44,11 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
   if (tryRead()) return;
 
   const iv = setInterval(() => {
-    if (tryRead() || Date.now() - startedAt > 5000) {
+    if (tryRead() || Date.now() - startedAt > 3000) {
       clearInterval(iv);
       if (isMounted) setIsLoading(false);
     }
-  }, 150);
+  }, 100);
 
   return () => {
     isMounted = false;
