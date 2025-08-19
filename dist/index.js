@@ -1829,59 +1829,6 @@ async function registerRoutes(app2) {
       res.status(500).json({ message: "Server error", error });
     }
   });
-  app2.get("/api/dev/seed-pending-raffles", async (req, res) => {
-    try {
-      const providedKey = req.query.key || "";
-      if (process.env.SEED_KEY && providedKey !== process.env.SEED_KEY) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      const now = Date.now();
-      const seedRaffles = [
-        {
-          channelId: "@test_channel_1",
-          messageId: `seed-${now}-1`,
-          forwardedMessageId: null,
-          prizeType: "stars",
-          prizeValue: 100,
-          requiredChannels: ["@telegram_farsi", "@tech_news_ir"],
-          raffleDateTime: new Date(now + 60 * 60 * 1e3),
-          levelRequired: 1,
-          submitterId: "seed_user"
-        },
-        {
-          channelId: "@test_channel_2",
-          messageId: `seed-${now}-2`,
-          forwardedMessageId: null,
-          prizeType: "premium",
-          prizeValue: 1,
-          requiredChannels: ["@premium_channel"],
-          raffleDateTime: new Date(now + 2 * 60 * 60 * 1e3),
-          levelRequired: 2,
-          submitterId: "seed_user"
-        },
-        {
-          channelId: "@test_channel_3",
-          messageId: `seed-${now}-3`,
-          forwardedMessageId: null,
-          prizeType: "mixed",
-          prizeValue: 50,
-          requiredChannels: ["@raffle_channel"],
-          raffleDateTime: new Date(now + 3 * 60 * 60 * 1e3),
-          levelRequired: 1,
-          submitterId: "seed_user"
-        }
-      ];
-      const created = [];
-      for (const s of seedRaffles) {
-        const r = await storage.createRaffle(s);
-        created.push(r);
-      }
-      res.json({ createdCount: created.length, created });
-    } catch (error) {
-      console.error("Seed pending raffles error:", error);
-      res.status(500).json({ message: "Server error", error });
-    }
-  });
   app2.post("/api/auth/telegram", async (req, res) => {
     try {
       const authData = upsertUserSchema.parse(req.body);
