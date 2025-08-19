@@ -21,7 +21,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user: telegramUser, isInTelegram } = useTelegram();
+  const { user: telegramUser, isInTelegram, isLoading: telegramLoading } = useTelegram();
   const [authMethod, setAuthMethod] = useState<"telegram" | "gmail" | "guest" | null>(null);
   const didAutoLoginRef = useRef(false);
   const queryClient = useQueryClient();
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     <AuthContext.Provider
       value={{
         user,
-        isLoading: isLoading || telegramLoginMutation.isPending || gmailLoginMutation.isPending,
+        isLoading: (telegramLoading || isLoading || telegramLoginMutation.isPending || gmailLoginMutation.isPending),
         isAuthenticated: !!user,
         loginWithTelegram,
         loginWithGmail,

@@ -53,6 +53,20 @@ export function AuthScreen() {
 
   const botStartLink = "https://t.me/your_raffle_bot"; // این باید از API گرفته شود
 
+  if (isLoading && isInTelegram) {
+    return (
+      <div className="min-h-screen bg-telegram-bg flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-full border-4 border-blue-500/30 border-t-blue-500 animate-spin" />
+          <div className="text-center">
+            <p className="text-telegram-text font-medium">در حال آماده‌سازی مینی‌اپ...</p>
+            <p className="text-telegram-hint text-sm mt-1">لطفاً چند لحظه صبر کنید</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
