@@ -25,6 +25,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [authMethod, setAuthMethod] = useState<"telegram" | "gmail" | "guest" | null>(null);
   const didAutoLoginRef = useRef(false);
   const queryClient = useQueryClient();
+  const storedEmail = typeof window !== 'undefined'
+    ? (() => {
+        try {
+          const raw = localStorage.getItem('authUser');
+          return raw ? JSON.parse(raw)?.email || null : null;
+        } catch {
+          return null;
+        }
+      })()
+    : null;
   
   // Check if user exists in database
   const { data: user, isLoading, refetch } = useQuery({
@@ -59,15 +69,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return null;
     },
     retry: false,
+    enabled: Boolean(telegramUser?.id || storedEmail || !isInTelegram),
   });
 
-  // Auto-login with Telegram if available
+  // Auto-login with Telegram as soon as Telegram user arrives
   useEffect(() => {
-  if (isInTelegram && telegramUser && !user && !isLoading && !didAutoLoginRef.current) {
-    didAutoLoginRef.current = true;
-    loginWithTelegram();
-  }
-}, [isInTelegram, telegramUser, user, isLoading]);
+    if (isInTelegram && telegramUser && !didAutoLoginRef.current) {
+      didAutoLoginRef.current = true;
+      loginWithTelegram();
+    }
+  }, [isInTelegram, telegramUser]);
 
   // Determine auth method
   useEffect(() => {
@@ -86,11 +97,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: `telegram_${telegramUser.id}`,
           telegramId: telegramUser.id.toString(),
           firstName: telegramUser.first_name,
           lastName: telegramUser.last_name || "",
-          username: telegramUser.username,
           profileImageUrl: undefined, // Not available in telegram user type
         }),
       });
@@ -118,7 +127,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: `gmail_${email}`,
           email,
           firstName,
           lastName,
