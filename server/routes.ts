@@ -546,6 +546,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development/ops: seed a few pending raffles for testing the admin panel
+  // Protect with optional SEED_KEY; call via: GET /api/dev/seed-pending-raffles?key=YOUR_KEY
+  app.get("/api/dev/seed-pending-raffles", async (req, res) => {
+    try {
+      const providedKey = (req.query.key as string) || "";
+      if (process.env.SEED_KEY && providedKey !== process.env.SEED_KEY) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const now = Date.now();
+      const seedRaffles = [
+        {
+          channelId: "@test_channel_1",
+          messageId: `seed-${now}-1`,
+          forwardedMessageId: null,
+          prizeType: "stars" as const,
+          prizeValue: 100,
+          requiredChannels: ["@telegram_farsi", "@tech_news_ir"],
+          raffleDateTime: new Date(now + 60 * 60 * 1000),
+          levelRequired: 1,
+          submitterId: "seed_user",
+        },
+        {
+          channelId: "@test_channel_2",
+          messageId: `seed-${now}-2`,
+          forwardedMessageId: null,
+          prizeType: "premium" as const,
+          prizeValue: 1,
+          requiredChannels: ["@premium_channel"],
+          raffleDateTime: new Date(now + 2 * 60 * 60 * 1000),
+          levelRequired: 2,
+          submitterId: "seed_user",
+        },
+        {
+          channelId: "@test_channel_3",
+          messageId: `seed-${now}-3`,
+          forwardedMessageId: null,
+          prizeType: "mixed" as const,
+          prizeValue: 50,
+          requiredChannels: ["@raffle_channel"],
+          raffleDateTime: new Date(now + 3 * 60 * 60 * 1000),
+          levelRequired: 1,
+          submitterId: "seed_user",
+        },
+      ];
+
+      const created: any[] = [];
+      for (const s of seedRaffles) {
+        const r = await storage.createRaffle(s as any);
+        created.push(r);
+      }
+
+      res.json({ createdCount: created.length, created });
+    } catch (error) {
+      console.error("Seed pending raffles error:", error);
+      res.status(500).json({ message: "Server error", error });
+    }
+  });
+
   // Authentication routes
   app.post("/api/auth/telegram", async (req, res) => {
     try {
