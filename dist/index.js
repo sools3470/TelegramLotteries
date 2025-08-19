@@ -1457,7 +1457,18 @@ async function registerRoutes(app2) {
   });
   app2.post("/api/raffles", async (req, res) => {
     try {
-      const raffleData = insertRaffleSchema.parse(req.body);
+      const createRaffleSchema = z2.object({
+        channelId: z2.string().min(1),
+        messageId: z2.string().min(1),
+        forwardedMessageId: z2.string().nullable().optional(),
+        prizeType: z2.enum(["stars", "premium", "mixed"]),
+        prizeValue: z2.number().int().optional(),
+        requiredChannels: z2.array(z2.string()).min(0),
+        raffleDateTime: z2.coerce.date(),
+        levelRequired: z2.number().int().default(1),
+        submitterId: z2.string().min(1)
+      });
+      const raffleData = createRaffleSchema.parse(req.body);
       const existingRaffles = await storage.getRafflesByStatus("pending");
       const approvedRaffles = await storage.getRafflesByStatus("approved");
       const allRaffles = [...existingRaffles, ...approvedRaffles];

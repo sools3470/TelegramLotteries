@@ -94,7 +94,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/raffles", async (req, res) => {
     try {
-      const raffleData = insertRaffleSchema.parse(req.body);
+      // More permissive schema for creation; server will compute requestNumber
+      const createRaffleSchema = z.object({
+        channelId: z.string().min(1),
+        messageId: z.string().min(1),
+        forwardedMessageId: z.string().nullable().optional(),
+        prizeType: z.enum(["stars", "premium", "mixed"]),
+        prizeValue: z.number().int().optional(),
+        requiredChannels: z.array(z.string()).min(0),
+        raffleDateTime: z.coerce.date(),
+        levelRequired: z.number().int().default(1),
+        submitterId: z.string().min(1),
+      });
+
+      const raffleData = createRaffleSchema.parse(req.body);
       
       // Check for duplicate raffle (same channel + message ID)
       const existingRaffles = await storage.getRafflesByStatus("pending");
@@ -109,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Raffle with this channel and message already exists" });
       }
       
-      const raffle = await storage.createRaffle(raffleData);
+      const raffle = await storage.createRaffle(raffleData as any);
       res.json(raffle);
     } catch (error) {
       res.status(400).json({ message: "Invalid raffle data", error });
