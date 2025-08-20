@@ -212,15 +212,18 @@ export function RaffleSubmissionDialog({ open, onOpenChange }: RaffleSubmissionD
                         name={field.name}
                         ref={field.ref}
                         value={field.value ?? ''}
-                        type="number"
-                        min="1"
-                        step="1"
+                        type="text"
                         inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="مثال: 100 Stars"
+                        pattern="[0-9۰-۹٠-٩]*"
+                        placeholder="مثال: 100"
                         onChange={e => {
-                          const val = e.target.value;
-                          field.onChange(val === '' ? undefined : Number(val));
+                          const raw = e.target.value;
+                          // Convert Persian/Arabic-Indic digits to ASCII
+                          const normalized = raw
+                            .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0))
+                            .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+                            .replace(/[^0-9]/g, '');
+                          field.onChange(normalized === '' ? undefined : Number(normalized));
                         }}
                       />
                     </FormControl>
