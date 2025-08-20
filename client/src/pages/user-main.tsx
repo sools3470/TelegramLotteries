@@ -65,7 +65,7 @@ export default function UserMainPage() {
     defaultValues: {
       title: "",
       prizeType: "stars",
-      prizeValue: 0,
+      prizeValue: undefined,
       requiredChannels: "",
       raffleDateTime: "",
       channelId: "",
@@ -226,7 +226,7 @@ export default function UserMainPage() {
     form.reset({
       title: raffle.title,
       prizeType: raffle.prizeType,
-      prizeValue: raffle.prizeValue || 0,
+      prizeValue: raffle.prizeValue ?? undefined,
       requiredChannels: raffle.requiredChannels?.join(', ') || "",
       raffleDateTime: new Date(raffle.raffleDateTime).toISOString().slice(0, 16),
       channelId: raffle.channelId,

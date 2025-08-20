@@ -311,7 +311,7 @@ export default function EnhancedUserMainPage() {
     form.reset({
       title: raffle.title,
       prizeType: raffle.prizeType,
-      prizeValue: raffle.prizeValue || 0,
+      prizeValue: raffle.prizeValue ?? undefined,
       requiredChannels: raffle.requiredChannels?.join(', ') || "",
       raffleDateTime: new Date(raffle.raffleDateTime).toISOString().slice(0, 16),
       channelId: raffle.channelId,

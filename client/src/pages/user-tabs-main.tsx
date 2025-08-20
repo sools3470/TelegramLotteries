@@ -79,7 +79,7 @@ export default function UserTabsMainPage() {
     defaultValues: {
       title: "",
       prizeType: "stars",
-      prizeValue: 0,
+      prizeValue: undefined,
       requiredChannels: "",
       raffleDateTime: "",
       channelId: "",
@@ -711,11 +711,22 @@ export default function UserTabsMainPage() {
                           <FormItem>
                             <FormLabel>مقدار جایزه</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="100" 
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                              <Input
+                                name={field.name}
+                                ref={field.ref}
+                                type="text"
+                                value={field.value ?? ''}
+                                inputMode="numeric"
+                                pattern="[0-9۰-۹٠-٩]*"
+                                placeholder="عدد (اختیاری)"
+                                onChange={(e) => {
+                                  const raw = e.target.value;
+                                  const normalized = raw
+                                    .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0))
+                                    .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+                                    .replace(/[^0-9]/g, '');
+                                  field.onChange(normalized === '' ? undefined : Number(normalized));
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
