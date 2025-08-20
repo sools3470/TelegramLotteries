@@ -307,21 +307,21 @@ export default function UserTabsMainPage() {
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="tabs-list-responsive mb-6">
-            <TabsTrigger value="profile" className="tabs-trigger-responsive">
-              <UserIcon size={16} />
-              <span>پروفایل</span>
-            </TabsTrigger>
-            <TabsTrigger value="points" className="tabs-trigger-responsive">
-              <Star size={16} />
-              <span>امتیازات</span>
-            </TabsTrigger>
             <TabsTrigger value="participate" className="tabs-trigger-responsive">
               <Trophy size={16} />
               <span>شرکت</span>
             </TabsTrigger>
             <TabsTrigger value="submit" className="tabs-trigger-responsive">
               <Plus size={16} />
-              <span>ثبت جدید</span>
+              <span>ثبت قرعه کشی</span>
+            </TabsTrigger>
+            <TabsTrigger value="points" className="tabs-trigger-responsive">
+              <Star size={16} />
+              <span>امتیازات</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="tabs-trigger-responsive">
+              <UserIcon size={16} />
+              <span>پروفایل</span>
             </TabsTrigger>
           </TabsList>
 
@@ -646,7 +646,7 @@ export default function UserTabsMainPage() {
             {/* Submission Filter Tabs */}
             <Tabs value={submissionFilter} onValueChange={setSubmissionFilter} className="w-full">
               <TabsList className="filter-tabs-responsive mb-4">
-                <TabsTrigger value="all" className="text-xs">همه</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs">ثبت جدید</TabsTrigger>
                 <TabsTrigger value="pending" className="text-xs">در انتظار</TabsTrigger>
                 <TabsTrigger value="approved" className="text-xs">تایید شده</TabsTrigger>
                 <TabsTrigger value="rejected" className="text-xs">رد شده</TabsTrigger>
