@@ -183,18 +183,25 @@ export default function UserTabsMainPage() {
 
   return (
     <div className="p-4 h-full overflow-y-auto tab-content-enter">
-      {/* ... earlier content omitted for brevity */}
+      {/* Main user tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4 flex flex-wrap gap-2">
+          <TabsTrigger value="participate">شرکت</TabsTrigger>
+          <TabsTrigger value="submit">ثبت قرعه کشی</TabsTrigger>
+          <TabsTrigger value="points">امتیازات</TabsTrigger>
+          <TabsTrigger value="profile">پروفایل</TabsTrigger>
+        </TabsList>
 
-      {/* Tab 4: Submit New Raffle */}
-      <TabsContent value="submit" className="space-y-6 tab-content-enter">
-        {/* Submission Filter Tabs */}
-        <Tabs value={submissionFilter} onValueChange={setSubmissionFilter} className="w-full">
-          <TabsList className="filter-tabs-responsive mb-4">
-            <TabsTrigger value="all" className="text-xs">ثبت جدید</TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs">در انتظار</TabsTrigger>
-            <TabsTrigger value="approved" className="text-xs">تایید شده</TabsTrigger>
-            <TabsTrigger value="rejected" className="text-xs">رد شده</TabsTrigger>
-          </TabsList>
+        {/* Submit tab */}
+        <TabsContent value="submit" className="space-y-6 tab-content-enter">
+          {/* Submission Filter Tabs */}
+          <Tabs value={submissionFilter} onValueChange={setSubmissionFilter} className="w-full">
+            <TabsList className="filter-tabs-responsive mb-4">
+              <TabsTrigger value="all" className="text-xs">ثبت جدید</TabsTrigger>
+              <TabsTrigger value="pending" className="text-xs">در انتظار</TabsTrigger>
+              <TabsTrigger value="approved" className="text-xs">تایید شده</TabsTrigger>
+              <TabsTrigger value="rejected" className="text-xs">رد شده</TabsTrigger>
+            </TabsList>
 
           {/* Show form only when "all" filter is selected */}
           {submissionFilter === "all" && (
@@ -425,8 +432,20 @@ export default function UserTabsMainPage() {
           )}
 
           {/* ... rest of submitted list rendering remains unchanged */}
-        </Tabs>
-      </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Simple placeholders for other tabs to avoid empty view */}
+        <TabsContent value="participate">
+          <div className="text-telegram-hint text-sm">بخش شرکت در قرعه‌کشی به‌زودی تکمیل می‌شود.</div>
+        </TabsContent>
+        <TabsContent value="points">
+          <div className="text-telegram-hint text-sm">بخش امتیازات در دست آماده‌سازی است.</div>
+        </TabsContent>
+        <TabsContent value="profile">
+          <div className="text-telegram-hint text-sm">برای مشاهده پروفایل از مسیر پروفایل نیز می‌توانید استفاده کنید.</div>
+        </TabsContent>
+      </Tabs>
 
       {/* ... rest of component unchanged */}
     </div>
