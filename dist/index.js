@@ -1466,7 +1466,8 @@ async function registerRoutes(app2) {
         requiredChannels: z2.array(z2.string()).min(0),
         raffleDateTime: z2.coerce.date(),
         levelRequired: z2.number().int().default(1),
-        submitterId: z2.string().min(1)
+        submitterId: z2.string().min(1),
+        originalData: z2.any().optional()
       });
       const raffleData = createRaffleSchema.parse(req.body);
       const existingRaffles = await storage.getRafflesByStatus("pending");

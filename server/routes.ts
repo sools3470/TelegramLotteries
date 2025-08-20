@@ -105,6 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         raffleDateTime: z.coerce.date(),
         levelRequired: z.number().int().default(1),
         submitterId: z.string().min(1),
+        originalData: z.any().optional(),
       });
 
       const raffleData = createRaffleSchema.parse(req.body);
