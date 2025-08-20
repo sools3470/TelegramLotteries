@@ -128,13 +128,10 @@ export default function UserTabsMainPage() {
   }) as { data: any[] };
 
   const { data: submittedRaffles = [] } = useQuery({
-    queryKey: ['/api/raffles/submitted', user?.id, submissionFilter],
+    queryKey: ['/api/raffles/submitted', user?.id],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (user?.id) params.append('submitterId', user.id);
-      if (submissionFilter && submissionFilter !== 'all') params.append('status', submissionFilter);
-      
-      const response = await fetch(`/api/raffles/submitted?${params.toString()}`);
+      if (!user?.id) return [];
+      const response = await fetch(`/api/raffles/submitted/${user.id}`);
       if (!response.ok) throw new Error('Failed to fetch submitted raffles');
       return await response.json();
     },
@@ -818,7 +815,17 @@ export default function UserTabsMainPage() {
                         {submissionFilter === "approved" && "قرعه‌کشی‌های تایید شده"}
                         {submissionFilter === "rejected" && "قرعه‌کشی‌های رد شده"}
                         <Badge variant="outline" className="ml-auto">
-                          {submittedRaffles.length} مورد
+                          {(() => {
+                            const list = submittedRaffles as any[];
+                            const count = submissionFilter === 'pending'
+                              ? list.filter(r => r.status === 'pending').length
+                              : submissionFilter === 'approved'
+                                ? list.filter(r => r.status === 'approved').length
+                                : submissionFilter === 'rejected'
+                                  ? list.filter(r => r.status === 'rejected').length
+                                  : list.length;
+                            return count;
+                          })()} مورد
                         </Badge>
                       </div>
                     </CardContent>
@@ -826,7 +833,14 @@ export default function UserTabsMainPage() {
 
                   {/* Submitted Raffles List */}
                   <div className="space-y-4">
-                    {submittedRaffles.map((raffle: any, index: number) => (
+                    {(submittedRaffles as any[])
+                      .filter((raffle: any) => {
+                        if (submissionFilter === 'pending') return raffle.status === 'pending';
+                        if (submissionFilter === 'approved') return raffle.status === 'approved';
+                        if (submissionFilter === 'rejected') return raffle.status === 'rejected';
+                        return true;
+                      })
+                      .map((raffle: any, index: number) => (
                       <Card 
                         key={raffle.id} 
                         className="shadow-telegram-lg hover:shadow-telegram-xl transition-all duration-300 animate-fade-in"
