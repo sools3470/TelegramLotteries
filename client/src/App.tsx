@@ -65,10 +65,10 @@ function Router() {
               <Route path="/profile" component={Profile} />
             </>
           ) : (
-            // Regular users (including raffle submission capabilities)
+            // Regular users (restore enhanced main panel)
             <>
-              <Route path="/" component={UserTabsMainPage} />
-              <Route path="/raffles" component={UserTabsMainPage} />
+              <Route path="/" component={EnhancedUserMainPage} />
+              <Route path="/raffles" component={EnhancedUserMainPage} />
               <Route path="/profile" component={Profile} />
               <Route path="/history" component={Profile} />
             </>
