@@ -46,7 +46,7 @@ export function RaffleSubmissionDialog({ open, onOpenChange }: RaffleSubmissionD
       messageId: "",
       title: "",
       prizeType: "stars",
-      prizeValue: 0,
+      prizeValue: undefined,
       requiredChannels: "",
       raffleDateTime: "",
     }
@@ -59,9 +59,18 @@ export function RaffleSubmissionDialog({ open, onOpenChange }: RaffleSubmissionD
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...data,
-          submitterId: user?.id,
-          status: 'pending'
+          channelId: data.channelId,
+          messageId: data.messageId,
+          title: data.title,
+          prizeType: data.prizeType,
+          prizeValue: typeof data.prizeValue === 'number' ? data.prizeValue : undefined,
+          requiredChannels: (data.requiredChannels || '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean),
+          raffleDateTime: data.raffleDateTime,
+          levelRequired: 1,
+          submitterId: user?.id || 'unknown'
         })
       });
       
@@ -200,11 +209,19 @@ export function RaffleSubmissionDialog({ open, onOpenChange }: RaffleSubmissionD
                     <FormLabel>مقدار جایزه</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value ?? ''}
                         type="number"
                         min="1"
+                        step="1"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="مثال: 100 Stars"
-                        onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                        onChange={e => {
+                          const val = e.target.value;
+                          field.onChange(val === '' ? undefined : Number(val));
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
