@@ -228,6 +228,7 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         username: users.username,
+        level: users.level,
       },
     })
     .from(raffles)
@@ -258,6 +259,7 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         username: users.username,
+        level: users.level,
       },
     })
     .from(raffles)

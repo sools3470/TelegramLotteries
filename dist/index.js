@@ -453,7 +453,8 @@ var init_storage = __esm({
             telegramId: users.telegramId,
             firstName: users.firstName,
             lastName: users.lastName,
-            username: users.username
+            username: users.username,
+            level: users.level
           }
         }).from(raffles).leftJoin(users, eq(raffles.submitterId, users.id));
       }
@@ -480,7 +481,8 @@ var init_storage = __esm({
             telegramId: users.telegramId,
             firstName: users.firstName,
             lastName: users.lastName,
-            username: users.username
+            username: users.username,
+            level: users.level
           }
         }).from(raffles).leftJoin(users, eq(raffles.submitterId, users.id)).where(eq(raffles.status, status));
         if (status === "pending") {
