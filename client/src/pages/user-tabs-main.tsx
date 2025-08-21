@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 
 import { format } from "date-fns";
+import Profile from "@/pages/profile";
 
 // New form schema per specs
 const raffleFormSchema = z.object({
@@ -112,6 +113,92 @@ export default function UserTabsMainPage() {
     },
   });
 
+  // Participate tab data and actions
+  const { data: raffles = [], isLoading: rafflesLoading } = useQuery({
+    queryKey: ['/api/raffles', user?.id, activeFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (user?.id) params.append('userId', user.id);
+      if (activeFilter && activeFilter !== 'all') params.append('filter', activeFilter);
+      const response = await fetch(`/api/raffles?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch raffles');
+      return await response.json();
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: seenRaffles = [] } = useQuery({
+    queryKey: ['/api/user/seen-raffles', user?.id],
+    enabled: !!user?.id,
+  }) as { data: string[] };
+
+  const { data: joinedRaffles = [] } = useQuery({
+    queryKey: ['/api/user/joined-raffles', user?.id],
+    enabled: !!user?.id,
+  }) as { data: string[] };
+
+  const joinRaffleMutation = useMutation({
+    mutationFn: async (raffleId: string) => {
+      const response = await fetch(`/api/raffles/${raffleId}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id }),
+      });
+      if (!response.ok) throw new Error('Failed to join raffle');
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/raffles'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/joined-raffles'] });
+      toast({ title: 'موفق', description: 'با موفقیت در قرعه‌کشی شرکت کردید' });
+    },
+    onError: () => {
+      toast({ title: 'خطا', description: 'خطا در شرکت در قرعه‌کشی', variant: 'destructive' });
+    }
+  });
+
+  const markSeenMutation = useMutation({
+    mutationFn: async (raffleId: string) => {
+      const response = await fetch(`/api/raffles/${raffleId}/seen`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id }),
+      });
+      if (!response.ok) throw new Error('Failed to mark as seen');
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/seen-raffles'] });
+    }
+  });
+
+  const getFilteredRaffles = () => {
+    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    switch (activeFilter) {
+      case 'today':
+        return (raffles as any[]).filter((raffle: any) => {
+          const raffleDate = new Date(raffle.raffleDateTime);
+          return raffleDate >= today && raffleDate < tomorrow;
+        });
+      case 'seen':
+        return (raffles as any[]).filter((raffle: any) => (seenRaffles as any[])?.includes?.(raffle.id));
+      case 'joined':
+        return (raffles as any[]).filter((raffle: any) => (joinedRaffles as any[])?.includes?.(raffle.id));
+      case 'ended':
+        return (raffles as any[]).filter((raffle: any) => new Date(raffle.raffleDateTime) < now);
+      default:
+        return raffles as any[];
+    }
+  };
+
+  const filteredRaffles = getFilteredRaffles();
+  const isUserJoined = (raffleId: string) => (joinedRaffles as any[])?.includes?.(raffleId) || false;
+
   // Submitted raffles for current user
   const { data: submittedRaffles = [], isLoading: submittedLoading } = useQuery({
     queryKey: ['/api/raffles/submitted', user?.id],
@@ -151,6 +238,7 @@ export default function UserTabsMainPage() {
     onSuccess: () => {
       toast({ title: "قرعه‌کشی با موفقیت ارسال شد و در انتظار تایید است" });
       form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/raffles'] });
       queryClient.invalidateQueries({ queryKey: ['/api/raffles/submitted'] });
     },
     onError: () => {
@@ -461,16 +549,61 @@ export default function UserTabsMainPage() {
 
         {/* Simple placeholders for other tabs to avoid empty view */}
         <TabsContent value="participate">
-          <div className="space-y-3">
-            <div className="text-xs text-telegram-text-secondary">قرعه‌کشی‌های مناسب سطح شما</div>
-            <div className="text-telegram-hint text-sm">(لیست شرکت اینجا قابل توسعه است)</div>
+          <div className="space-y-4">
+            <Card className="telegram-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-sm text-telegram-text-secondary">
+                  <Filter className="w-4 h-4" />
+                  {activeFilter === 'all' && 'تمام قرعه‌کشی‌های مناسب سطح شما'}
+                  {activeFilter === 'today' && 'قرعه‌کشی‌های امروز'}
+                  {activeFilter === 'seen' && 'قرعه‌کشی‌هایی که مشاهده کرده‌اید'}
+                  {activeFilter === 'joined' && 'قرعه‌کشی‌هایی که در آن شرکت کرده‌اید'}
+                  {activeFilter === 'ended' && 'قرعه‌کشی‌های پایان یافته'}
+                  <Badge variant="outline" className="ml-auto">{filteredRaffles.length} مورد</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {rafflesLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-telegram"></div>
+              </div>
+            ) : filteredRaffles.length === 0 ? (
+              <Card className="telegram-card">
+                <CardContent className="p-8 text-center text-telegram-text-secondary">
+                  موردی یافت نشد
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {(filteredRaffles as any[]).map((raffle: any) => (
+                  <Card key={raffle.id} className="telegram-card">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm">
+                          <div className="font-semibold text-telegram">{raffle.title || 'قرعه‌کشی'}</div>
+                          <div className="text-telegram-text-secondary text-xs">{new Date(raffle.raffleDateTime).toLocaleString('fa-IR')}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          {isUserJoined(raffle.id) ? (
+                            <Badge variant="outline" className="text-green-600 border-green-600 text-xs">شرکت کرده</Badge>
+                          ) : (
+                            <Button size="sm" className="text-xs" onClick={() => joinRaffleMutation.mutate(raffle.id)} disabled={joinRaffleMutation.isPending}>شرکت</Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </TabsContent>
         <TabsContent value="points">
           <div className="text-telegram-hint text-sm">امتیازات شما به‌زودی اینجا نمایش داده می‌شود.</div>
         </TabsContent>
         <TabsContent value="profile">
-          <div className="text-telegram-hint text-sm">اطلاعات پروفایل را از تب پروفایل نیز می‌توانید ببینید.</div>
+          <Profile />
         </TabsContent>
       </Tabs>
 
