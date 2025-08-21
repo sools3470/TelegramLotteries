@@ -53,15 +53,7 @@ import { format } from "date-fns";
 
 // Form schema for raffle submission
 const raffleFormSchema = z.object({
-  title: z.string().min(3, "عنوان باید حداقل ۳ کاراکتر باشد"),
-  prizeType: z.enum(["stars", "premium", "mixed"], {
-    required_error: "نوع جایزه را انتخاب کنید"
-  }),
-  prizeValue: z.number().min(1, "مقدار جایزه باید مثبت باشد").optional(),
-  requiredChannels: z.string().min(1, "حداقل یک کانال الزامی است"),
-  raffleDateTime: z.string().min(1, "تاریخ و زمان الزامی است"),
-  channelId: z.string().min(1, "شناسه کانال الزامی است"),
-  messageId: z.string().min(1, "شناسه پیام الزامی است"),
+  messageUrl: z.string().min(1, "لینک پیام قرعه‌کشی الزامی است"),
 });
 
 type RaffleFormData = z.infer<typeof raffleFormSchema>;
@@ -77,13 +69,7 @@ export default function UserTabsMainPage() {
   const form = useForm<RaffleFormData>({
     resolver: zodResolver(raffleFormSchema),
     defaultValues: {
-      title: "",
-      prizeType: "stars",
-      prizeValue: undefined,
-      requiredChannels: "",
-      raffleDateTime: "",
-      channelId: "",
-      messageId: "",
+      messageUrl: "",
     },
   });
 
@@ -184,10 +170,9 @@ export default function UserTabsMainPage() {
   const submitRaffleMutation = useMutation({
     mutationFn: async (data: RaffleFormData) => {
       const requestData = {
-        ...data,
-        requiredChannels: data.requiredChannels.split(',').map(ch => ch.trim()),
+        messageUrl: data.messageUrl,
         submitterId: user?.id,
-        raffleDateTime: new Date(data.raffleDateTime).toISOString(),
+        originalData: data,
       };
 
       const response = await fetch('/api/raffles', {
@@ -669,106 +654,6 @@ export default function UserTabsMainPage() {
                           <FormLabel>لینک پیام قرعه‌کشی (از کانال برگزارکننده)</FormLabel>
                           <FormControl>
                             <Input placeholder="https://t.me/channel/12345" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-
-
-                    <div className="responsive-grid">
-                      <FormField
-                        control={form.control}
-                        name="prizeChoice"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>نوع جایزه</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="انتخاب کنید" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="stars">ستاره</SelectItem>
-                                <SelectItem value="premium">اشتراک پریمیوم</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="requiredChannelsCount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>تعداد کانال‌های شرط</FormLabel>
-                            <FormControl>
-                              <Input type="number" min={1} value={(field.value as any) ?? 1} onChange={(e) => field.onChange(Math.max(1, Number(e.target.value) || 1))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* prize dependent fields */}
-                    {form.watch('prizeChoice') === 'stars' && (
-                      <div className="responsive-grid">
-                        <FormField control={form.control} name="starsCount" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>تعداد ستاره</FormLabel>
-                            <FormControl><Input type="number" min={1} value={(field.value as any) ?? ''} onChange={(e) => field.onChange(Number(e.target.value) || undefined)} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={form.control} name="starsWinners" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>بین چند برنده توزیع شود؟</FormLabel>
-                            <FormControl><Input type="number" min={1} value={(field.value as any) ?? ''} onChange={(e) => field.onChange(Number(e.target.value) || undefined)} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                      </div>
-                    )}
-
-                    {form.watch('prizeChoice') === 'premium' && (
-                      <div className="responsive-grid">
-                        <FormField control={form.control} name="premiumCount" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>تعداد اشتراک</FormLabel>
-                            <FormControl><Input type="number" min={1} value={(field.value as any) ?? ''} onChange={(e) => field.onChange(Number(e.target.value) || undefined)} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={form.control} name="premiumDurationMonths" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>مدت هر اشتراک</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl><SelectTrigger><SelectValue placeholder="انتخاب مدت" /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                <SelectItem value="3">۳ ماهه</SelectItem>
-                                <SelectItem value="6">۶ ماهه</SelectItem>
-                                <SelectItem value="12">۱۲ ماهه</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                      </div>
-                    )}
-
-                    <FormField
-                      control={form.control}
-                      name="raffleDateTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>تاریخ و زمان قرعه‌کشی</FormLabel>
-                          <FormControl>
-                            <Input type="datetime-local" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

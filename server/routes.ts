@@ -101,11 +101,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // New payload path: messageUrl-based
         const newSchema = z.object({
           messageUrl: z.string().min(1),
-          prizeType: z.enum(["stars", "premium", "mixed"]).optional(),
-          prizeValue: z.number().int().optional(),
-          requiredChannelsCount: z.number().int().min(1).default(1),
-          raffleDateTime: z.coerce.date(),
-          levelRequired: z.number().int().default(1),
           submitterId: z.string().min(1),
           originalData: z.any().optional(),
         });
@@ -121,16 +116,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids
-        const placeholders = Array.from({ length: payload.requiredChannelsCount }, (_, i) => `TBD-${i + 1}`);
         const legacy = {
           channelId: "@unknown",
           messageId: String(Date.now()),
           forwardedMessageId: null,
-          prizeType: payload.prizeType || "stars",
-          prizeValue: payload.prizeValue,
-          requiredChannels: placeholders,
-          raffleDateTime: payload.raffleDateTime,
-          levelRequired: payload.levelRequired || 1,
+          prizeType: "stars", // Default, will be set by admin
+          prizeValue: undefined, // Will be set by admin
+          requiredChannels: ["TBD"], // Will be set by admin
+          raffleDateTime: new Date().toISOString(), // Will be set by admin
+          levelRequired: 1,
           submitterId: payload.submitterId,
           originalData: { ...payload },
         } as any;
