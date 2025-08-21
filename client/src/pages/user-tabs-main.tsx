@@ -663,12 +663,12 @@ export default function UserTabsMainPage() {
                   <form onSubmit={form.handleSubmit(handleSubmitRaffle)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="title"
+                      name="messageUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>عنوان قرعه‌کشی</FormLabel>
+                          <FormLabel>لینک پیام قرعه‌کشی (از کانال برگزارکننده)</FormLabel>
                           <FormControl>
-                            <Input placeholder="عنوان قرعه‌کشی را وارد کنید" {...field} />
+                            <Input placeholder="https://t.me/channel/12345" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -680,20 +680,19 @@ export default function UserTabsMainPage() {
                     <div className="responsive-grid">
                       <FormField
                         control={form.control}
-                        name="prizeType"
+                        name="prizeChoice"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>نوع جایزه</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="نوع جایزه را انتخاب کنید" />
+                                  <SelectValue placeholder="انتخاب کنید" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="stars">ستاره</SelectItem>
-                                <SelectItem value="premium">پریمیوم</SelectItem>
-                                <SelectItem value="mixed">ترکیبی</SelectItem>
+                                <SelectItem value="premium">اشتراک پریمیوم</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -703,28 +702,12 @@ export default function UserTabsMainPage() {
 
                       <FormField
                         control={form.control}
-                        name="prizeValue"
+                        name="requiredChannelsCount"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>مقدار جایزه</FormLabel>
+                            <FormLabel>تعداد کانال‌های شرط</FormLabel>
                             <FormControl>
-                              <Input
-                                name={field.name}
-                                ref={field.ref}
-                                type="text"
-                                value={field.value ?? ''}
-                                inputMode="numeric"
-                                pattern="[0-9۰-۹٠-٩]*"
-                                placeholder="عدد (اختیاری)"
-                                onChange={(e) => {
-                                  const raw = e.target.value;
-                                  const normalized = raw
-                                    .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0))
-                                    .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
-                                    .replace(/[^0-9]/g, '');
-                                  field.onChange(normalized === '' ? undefined : Number(normalized));
-                                }}
-                              />
+                              <Input type="number" min={1} value={(field.value as any) ?? 1} onChange={(e) => field.onChange(Math.max(1, Number(e.target.value) || 1))} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -732,49 +715,51 @@ export default function UserTabsMainPage() {
                       />
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="requiredChannels"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>کانال‌های مورد نیاز</FormLabel>
-                          <FormControl>
-                            <Input placeholder="@channel1, @channel2" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="responsive-grid">
-                      <FormField
-                        control={form.control}
-                        name="channelId"
-                        render={({ field }) => (
+                    {/* prize dependent fields */}
+                    {form.watch('prizeChoice') === 'stars' && (
+                      <div className="responsive-grid">
+                        <FormField control={form.control} name="starsCount" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>شناسه کانال</FormLabel>
-                            <FormControl>
-                              <Input placeholder="-1001234567890" {...field} />
-                            </FormControl>
+                            <FormLabel>تعداد ستاره</FormLabel>
+                            <FormControl><Input type="number" min={1} value={(field.value as any) ?? ''} onChange={(e) => field.onChange(Number(e.target.value) || undefined)} /></FormControl>
                             <FormMessage />
                           </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="messageId"
-                        render={({ field }) => (
+                        )} />
+                        <FormField control={form.control} name="starsWinners" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>شناسه پیام</FormLabel>
-                            <FormControl>
-                              <Input placeholder="123" {...field} />
-                            </FormControl>
+                            <FormLabel>بین چند برنده توزیع شود؟</FormLabel>
+                            <FormControl><Input type="number" min={1} value={(field.value as any) ?? ''} onChange={(e) => field.onChange(Number(e.target.value) || undefined)} /></FormControl>
                             <FormMessage />
                           </FormItem>
-                        )}
-                      />
-                    </div>
+                        )} />
+                      </div>
+                    )}
+
+                    {form.watch('prizeChoice') === 'premium' && (
+                      <div className="responsive-grid">
+                        <FormField control={form.control} name="premiumCount" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>تعداد اشتراک</FormLabel>
+                            <FormControl><Input type="number" min={1} value={(field.value as any) ?? ''} onChange={(e) => field.onChange(Number(e.target.value) || undefined)} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="premiumDurationMonths" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>مدت هر اشتراک</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="انتخاب مدت" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                <SelectItem value="3">۳ ماهه</SelectItem>
+                                <SelectItem value="6">۶ ماهه</SelectItem>
+                                <SelectItem value="12">۱۲ ماهه</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    )}
 
                     <FormField
                       control={form.control}

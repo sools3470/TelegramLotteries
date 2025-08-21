@@ -1457,6 +1457,42 @@ async function registerRoutes(app2) {
   });
   app2.post("/api/raffles", async (req, res) => {
     try {
+      const isNewPayload = typeof req.body?.messageUrl === "string";
+      if (isNewPayload) {
+        const newSchema = z2.object({
+          messageUrl: z2.string().min(1),
+          prizeType: z2.enum(["stars", "premium", "mixed"]).optional(),
+          prizeValue: z2.number().int().optional(),
+          requiredChannelsCount: z2.number().int().min(1).default(1),
+          raffleDateTime: z2.coerce.date(),
+          levelRequired: z2.number().int().default(1),
+          submitterId: z2.string().min(1),
+          originalData: z2.any().optional()
+        });
+        const payload = newSchema.parse(req.body);
+        const allPending = await storage.getRafflesByStatus("pending");
+        const allApproved = await storage.getRafflesByStatus("approved");
+        const all = [...allPending, ...allApproved];
+        const duplicate2 = all.find((r) => r.originalData?.messageUrl === payload.messageUrl);
+        if (duplicate2) {
+          return res.status(400).json({ message: "Raffle with this messageUrl already exists" });
+        }
+        const placeholders = Array.from({ length: payload.requiredChannelsCount }, (_, i) => `TBD-${i + 1}`);
+        const legacy = {
+          channelId: "@unknown",
+          messageId: String(Date.now()),
+          forwardedMessageId: null,
+          prizeType: payload.prizeType || "stars",
+          prizeValue: payload.prizeValue,
+          requiredChannels: placeholders,
+          raffleDateTime: payload.raffleDateTime,
+          levelRequired: payload.levelRequired || 1,
+          submitterId: payload.submitterId,
+          originalData: { ...payload }
+        };
+        const raffle2 = await storage.createRaffle(legacy);
+        return res.json(raffle2);
+      }
       const createRaffleSchema = z2.object({
         channelId: z2.string().min(1),
         messageId: z2.string().min(1),

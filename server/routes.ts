@@ -94,7 +94,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/raffles", async (req, res) => {
     try {
-      // More permissive schema for creation; server will compute requestNumber
+      // Accept either legacy payload or new payload (adapter mode)
+      const isNewPayload = typeof req.body?.messageUrl === 'string';
+
+      if (isNewPayload) {
+        // New payload path: messageUrl-based
+        const newSchema = z.object({
+          messageUrl: z.string().min(1),
+          prizeType: z.enum(["stars", "premium", "mixed"]).optional(),
+          prizeValue: z.number().int().optional(),
+          requiredChannelsCount: z.number().int().min(1).default(1),
+          raffleDateTime: z.coerce.date(),
+          levelRequired: z.number().int().default(1),
+          submitterId: z.string().min(1),
+          originalData: z.any().optional(),
+        });
+        const payload = newSchema.parse(req.body);
+
+        // Duplicate check by messageUrl (stored inside originalData in legacy DB)
+        const allPending = await storage.getRafflesByStatus("pending");
+        const allApproved = await storage.getRafflesByStatus("approved");
+        const all = [...allPending, ...allApproved];
+        const duplicate = all.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        if (duplicate) {
+          return res.status(400).json({ message: "Raffle with this messageUrl already exists" });
+        }
+
+        // Map to legacy required fields: synthesize placeholders + dummy ids
+        const placeholders = Array.from({ length: payload.requiredChannelsCount }, (_, i) => `TBD-${i + 1}`);
+        const legacy = {
+          channelId: "@unknown",
+          messageId: String(Date.now()),
+          forwardedMessageId: null,
+          prizeType: payload.prizeType || "stars",
+          prizeValue: payload.prizeValue,
+          requiredChannels: placeholders,
+          raffleDateTime: payload.raffleDateTime,
+          levelRequired: payload.levelRequired || 1,
+          submitterId: payload.submitterId,
+          originalData: { ...payload },
+        } as any;
+
+        const raffle = await storage.createRaffle(legacy);
+        return res.json(raffle);
+      }
+
+      // Legacy payload path (unchanged)
       const createRaffleSchema = z.object({
         channelId: z.string().min(1),
         messageId: z.string().min(1),
@@ -109,20 +154,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const raffleData = createRaffleSchema.parse(req.body);
-      
+
       // Check for duplicate raffle (same channel + message ID)
       const existingRaffles = await storage.getRafflesByStatus("pending");
       const approvedRaffles = await storage.getRafflesByStatus("approved");
       const allRaffles = [...existingRaffles, ...approvedRaffles];
-      
-      const duplicate = allRaffles.find(r => 
+
+      const duplicate = allRaffles.find(r =>
         r.channelId === raffleData.channelId && r.messageId === raffleData.messageId
       );
-      
+
       if (duplicate) {
         return res.status(400).json({ message: "Raffle with this channel and message already exists" });
       }
-      
+
       const raffle = await storage.createRaffle(raffleData as any);
       res.json(raffle);
     } catch (error) {
