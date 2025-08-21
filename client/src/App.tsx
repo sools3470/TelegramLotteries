@@ -67,8 +67,8 @@ function Router() {
           ) : (
             // Regular users (4-tab main user page)
             <>
-              <Route path="/" component={UserTabsMainPage} />
-              <Route path="/raffles" component={UserTabsMainPage} />
+              <Route path="/" component={EnhancedUserMainPage} />
+              <Route path="/raffles" component={EnhancedUserMainPage} />
               <Route path="/profile" component={Profile} />
               <Route path="/history" component={Profile} />
             </>
