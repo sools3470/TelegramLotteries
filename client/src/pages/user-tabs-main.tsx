@@ -112,7 +112,30 @@ export default function UserTabsMainPage() {
     },
   });
 
-  // ... keep existing queries/mutations (omitted for brevity)
+  // Submitted raffles for current user
+  const { data: submittedRaffles = [], isLoading: submittedLoading } = useQuery({
+    queryKey: ['/api/raffles/submitted', user?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/raffles/submitted/${user?.id}`);
+      if (!response.ok) throw new Error('Failed to fetch submitted raffles');
+      return await response.json();
+    },
+    enabled: !!user?.id,
+  });
+
+  const getFilteredSubmissions = () => {
+    switch (submissionFilter) {
+      case 'pending':
+        return (submittedRaffles as any[]).filter(r => r.status === 'pending');
+      case 'approved':
+        return (submittedRaffles as any[]).filter(r => r.status === 'approved');
+      case 'rejected':
+        return (submittedRaffles as any[]).filter(r => r.status === 'rejected');
+      default:
+        return submittedRaffles as any[];
+    }
+  };
+  const filteredSubmissions = getFilteredSubmissions();
 
   const submitRaffleMutation = useMutation({
     mutationFn: async (requestData: any) => {
@@ -128,6 +151,7 @@ export default function UserTabsMainPage() {
     onSuccess: () => {
       toast({ title: "قرعه‌کشی با موفقیت ارسال شد و در انتظار تایید است" });
       form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/raffles/submitted'] });
     },
     onError: () => {
       toast({ title: "خطا در ارسال قرعه‌کشی", variant: "destructive" });
@@ -437,13 +461,16 @@ export default function UserTabsMainPage() {
 
         {/* Simple placeholders for other tabs to avoid empty view */}
         <TabsContent value="participate">
-          <div className="text-telegram-hint text-sm">بخش شرکت در قرعه‌کشی به‌زودی تکمیل می‌شود.</div>
+          <div className="space-y-3">
+            <div className="text-xs text-telegram-text-secondary">قرعه‌کشی‌های مناسب سطح شما</div>
+            <div className="text-telegram-hint text-sm">(لیست شرکت اینجا قابل توسعه است)</div>
+          </div>
         </TabsContent>
         <TabsContent value="points">
-          <div className="text-telegram-hint text-sm">بخش امتیازات در دست آماده‌سازی است.</div>
+          <div className="text-telegram-hint text-sm">امتیازات شما به‌زودی اینجا نمایش داده می‌شود.</div>
         </TabsContent>
         <TabsContent value="profile">
-          <div className="text-telegram-hint text-sm">برای مشاهده پروفایل از مسیر پروفایل نیز می‌توانید استفاده کنید.</div>
+          <div className="text-telegram-hint text-sm">اطلاعات پروفایل را از تب پروفایل نیز می‌توانید ببینید.</div>
         </TabsContent>
       </Tabs>
 
