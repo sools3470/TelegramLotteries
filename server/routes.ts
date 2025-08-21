@@ -123,12 +123,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           prizeType: "stars", // Default, will be set by admin
           prizeValue: undefined, // Will be set by admin
           requiredChannels: ["TBD"], // Will be set by admin
-          raffleDateTime: new Date().toISOString(), // Will be set by admin
+          raffleDateTime: new Date(), // Use Date object instead of ISO string
           levelRequired: 1,
           submitterId: payload.submitterId,
           originalData: { ...payload },
         } as any;
 
+        console.log('Creating raffle with legacy data:', legacy);
         const raffle = await storage.createRaffle(legacy);
         return res.json(raffle);
       }
@@ -165,7 +166,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const raffle = await storage.createRaffle(raffleData as any);
       res.json(raffle);
     } catch (error) {
-      res.status(400).json({ message: "Invalid raffle data", error });
+      console.error('Raffle creation error:', error);
+      res.status(400).json({ 
+        message: "Invalid raffle data", 
+        error: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.stack : undefined
+      });
     }
   });
 

@@ -1484,12 +1484,13 @@ async function registerRoutes(app2) {
           // Will be set by admin
           requiredChannels: ["TBD"],
           // Will be set by admin
-          raffleDateTime: (/* @__PURE__ */ new Date()).toISOString(),
-          // Will be set by admin
+          raffleDateTime: /* @__PURE__ */ new Date(),
+          // Use Date object instead of ISO string
           levelRequired: 1,
           submitterId: payload.submitterId,
           originalData: { ...payload }
         };
+        console.log("Creating raffle with legacy data:", legacy);
         const raffle2 = await storage.createRaffle(legacy);
         return res.json(raffle2);
       }
@@ -1518,7 +1519,12 @@ async function registerRoutes(app2) {
       const raffle = await storage.createRaffle(raffleData);
       res.json(raffle);
     } catch (error) {
-      res.status(400).json({ message: "Invalid raffle data", error });
+      console.error("Raffle creation error:", error);
+      res.status(400).json({
+        message: "Invalid raffle data",
+        error: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.stack : void 0
+      });
     }
   });
   app2.put("/api/raffles/:id", async (req, res) => {
