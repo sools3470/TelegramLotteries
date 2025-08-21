@@ -65,7 +65,7 @@ function Router() {
               <Route path="/profile" component={Profile} />
             </>
           ) : (
-            // Regular users (including raffle submission capabilities)
+            // Regular users (4-tab main user page)
             <>
               <Route path="/" component={UserTabsMainPage} />
               <Route path="/raffles" component={UserTabsMainPage} />

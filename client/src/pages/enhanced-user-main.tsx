@@ -44,17 +44,39 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-// Form schema for raffle submission
+// New submission schema per spec (messageUrl, date/time, requiredChannelsCount, prizeChoice, countries)
 const raffleFormSchema = z.object({
-  title: z.string().min(3, "عنوان باید حداقل ۳ کاراکتر باشد"),
-  prizeType: z.enum(["stars", "premium", "mixed"], {
-    required_error: "نوع جایزه را انتخاب کنید"
+  messageUrl: z.string().min(1, "لینک پیام الزامی است").refine(v => v.startsWith("https://t.me/"), {
+    message: "لینک باید با https://t.me/ شروع شود",
   }),
-  prizeValue: z.number().min(1, "مقدار جایزه باید مثبت باشد").optional(),
-  requiredChannels: z.string().min(1, "حداقل یک کانال الزامی است"),
   raffleDateTime: z.string().min(1, "تاریخ و زمان الزامی است"),
-  channelId: z.string().min(1, "شناسه کانال الزامی است"),
-  messageId: z.string().min(1, "شناسه پیام الزامی است"),
+  requiredChannelsCount: z.coerce.number().int().min(1, "تعداد کانال‌ها باید حداقل 1 باشد"),
+  prizeChoice: z.enum(["stars", "premium"], {
+    required_error: "انتخاب نوع جایزه الزامی است"
+  }),
+  // Stars
+  starsCount: z.coerce.number().int().min(1, "تعداد ستاره باید بیش از 0 باشد").optional(),
+  starsWinners: z.coerce.number().int().min(1, "تعداد برندگان باید بیش از 0 باشد").optional(),
+  // Premium
+  premiumCount: z.coerce.number().int().min(1, "تعداد اشتراک باید بیش از 0 باشد").optional(),
+  premiumDurationMonths: z.enum(["3", "6", "12"]).optional(),
+  // Countries
+  allCountries: z.boolean().default(true),
+  selectedCountries: z.array(z.string()).optional(),
+}).superRefine((data, ctx) => {
+  if (data.prizeChoice === "stars") {
+    if (!data.starsCount || data.starsCount < 1) ctx.addIssue({ code: "custom", path: ["starsCount"], message: "تعداد ستاره باید بیش از 0 باشد" });
+    if (!data.starsWinners || data.starsWinners < 1) ctx.addIssue({ code: "custom", path: ["starsWinners"], message: "تعداد برندگان باید بیش از 0 باشد" });
+  }
+  if (data.prizeChoice === "premium") {
+    if (!data.premiumCount || data.premiumCount < 1) ctx.addIssue({ code: "custom", path: ["premiumCount"], message: "تعداد اشتراک باید بیش از 0 باشد" });
+    if (!data.premiumDurationMonths) ctx.addIssue({ code: "custom", path: ["premiumDurationMonths"], message: "مدت زمان اشتراک را انتخاب کنید" });
+  }
+  if (!data.allCountries) {
+    if (!data.selectedCountries || data.selectedCountries.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["selectedCountries"], message: "حداقل یک کشور را انتخاب کنید" });
+    }
+  }
 });
 
 type RaffleFormData = z.infer<typeof raffleFormSchema>;
@@ -72,13 +94,16 @@ export default function EnhancedUserMainPage() {
   const form = useForm<RaffleFormData>({
     resolver: zodResolver(raffleFormSchema),
     defaultValues: {
-      title: "",
-      prizeType: "stars",
-      prizeValue: undefined,
-      requiredChannels: "",
+      messageUrl: "",
       raffleDateTime: "",
-      channelId: "",
-      messageId: "",
+      requiredChannelsCount: 1,
+      prizeChoice: "stars",
+      starsCount: undefined,
+      starsWinners: undefined,
+      premiumCount: undefined,
+      premiumDurationMonths: undefined,
+      allCountries: true,
+      selectedCountries: [],
     },
   });
 
@@ -179,14 +204,7 @@ export default function EnhancedUserMainPage() {
   });
 
   const submitRaffleMutation = useMutation({
-    mutationFn: async (data: RaffleFormData) => {
-      const requestData = {
-        ...data,
-        requiredChannels: data.requiredChannels.split(',').map(ch => ch.trim()),
-        submitterId: user?.id,
-        raffleDateTime: new Date(data.raffleDateTime).toISOString(),
-      };
-
+    mutationFn: async (requestData: any) => {
       const response = await fetch('/api/raffles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -302,8 +320,47 @@ export default function EnhancedUserMainPage() {
     }
   };
 
+  const parseMessageUrl = (url: string): { channelId: string; messageId: string } => {
+    try {
+      const withoutProto = url.replace("https://t.me/", "");
+      const parts = withoutProto.split("/");
+      if (parts[0] === "c" && parts.length >= 3) {
+        const messageId = parts[2];
+        return { channelId: "@unknown", messageId };
+      }
+      const channel = parts[0];
+      const messageId = parts[1];
+      return { channelId: `@${channel}`, messageId };
+    } catch {
+      return { channelId: "@unknown", messageId: "" };
+    }
+  };
+
   const handleSubmitRaffle = (data: RaffleFormData) => {
-    submitRaffleMutation.mutate(data);
+    const { channelId, messageId } = parseMessageUrl(data.messageUrl);
+    const prizeType = data.prizeChoice;
+    const prizeValue = prizeType === 'stars' ? Number(data.starsCount) : Number(data.premiumCount);
+    const requiredChannels = Array.from({ length: Number(data.requiredChannelsCount) }, (_, i) => `TBD-${i + 1}`);
+
+    const payload = {
+      channelId,
+      messageId,
+      prizeType,
+      prizeValue,
+      requiredChannels,
+      raffleDateTime: new Date(data.raffleDateTime).toISOString(),
+      levelRequired: 1,
+      submitterId: user?.id,
+      originalData: {
+        rawMessageUrl: data.messageUrl,
+        stars: data.prizeChoice === 'stars' ? { count: data.starsCount, winners: data.starsWinners } : undefined,
+        premium: data.prizeChoice === 'premium' ? { count: data.premiumCount, durationMonths: data.premiumDurationMonths } : undefined,
+        countries: { all: data.allCountries, selected: data.selectedCountries },
+        requiredChannelsCount: data.requiredChannelsCount,
+      },
+    };
+
+    submitRaffleMutation.mutate(payload as any);
   };
 
   const handleEditRaffle = (raffle: any) => {
@@ -736,126 +793,28 @@ export default function EnhancedUserMainPage() {
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmitRaffle)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>عنوان قرعه‌کشی *</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="عنوان جذاب برای قرعه‌کشی" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="prizeType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>نوع جایزه *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="نوع جایزه را انتخاب کنید" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="stars">استارز تلگرام</SelectItem>
-                          <SelectItem value="premium">پریمیوم تلگرام</SelectItem>
-                          <SelectItem value="mixed">ترکیبی</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
+              {/* New form fields per spec */}
               <FormField
                 control={form.control}
-                name="description"
+                name="messageUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>توضیحات (اختیاری)</FormLabel>
+                    <FormLabel>لینک پیام قرعه‌کشی (از کانال برگزارکننده) *</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="توضیحات اضافی درباره قرعه‌کشی" rows={3} />
+                      <Input {...field} placeholder="https://t.me/channel/12345" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="prizeDescription"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>توضیحات جایزه *</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="مثال: 100 استار تلگرام" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="prizeValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>مقدار جایزه</FormLabel>
-                      <FormControl>
-                        <Input
-                          name={field.name}
-                          ref={field.ref}
-                          type="text"
-                          value={field.value ?? ''}
-                          inputMode="numeric"
-                          pattern="[0-9۰-۹٠-٩]*"
-                          placeholder="عدد (اختیاری)"
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            const normalized = raw
-                              .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0))
-                              .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
-                              .replace(/[^0-9]/g, '');
-                            field.onChange(normalized === '' ? undefined : Number(normalized));
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="requiredChannels"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>کانال‌های مورد نیاز *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="@channel1, @channel2 (با کاما جدا کنید)" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="raffleDateTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>تاریخ و زمان قرعه‌کشی *</FormLabel>
+                      <FormLabel>تاریخ و زمان اعلام برنده *</FormLabel>
                       <FormControl>
                         <Input type="datetime-local" {...field} />
                       </FormControl>
@@ -863,34 +822,169 @@ export default function EnhancedUserMainPage() {
                     </FormItem>
                   )}
                 />
-                
                 <FormField
                   control={form.control}
-                  name="channelId"
+                  name="requiredChannelsCount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>شناسه کانال *</FormLabel>
+                      <FormLabel>تعداد کانال‌های شرط برای شرکت *</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="@yourchannel" />
+                        <Input type="number" min={1} value={field.value as any} onChange={(e) => field.onChange(Math.max(1, Number(e.target.value) || 1))} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+              </div>
+
+              <div className="responsive-grid">
                 <FormField
                   control={form.control}
-                  name="messageId"
+                  name="prizeChoice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>شناسه پیام *</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="123456" />
-                      </FormControl>
+                      <FormLabel>نوع جایزه *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="انتخاب کنید" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="stars">ستاره</SelectItem>
+                          <SelectItem value="premium">اشتراک تلگرام پریمیوم</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {form.watch('prizeChoice') === 'stars' && (
+                  <div className="responsive-grid">
+                    <FormField
+                      control={form.control}
+                      name="starsCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>تعداد ستاره *</FormLabel>
+                          <FormControl>
+                            <Input type="number" min={1} value={field.value as any || ''} onChange={e => field.onChange(Number(e.target.value) || undefined)} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="starsWinners"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>بین چند برنده توزیع شود؟ *</FormLabel>
+                          <FormControl>
+                            <Input type="number" min={1} value={field.value as any || ''} onChange={e => field.onChange(Number(e.target.value) || undefined)} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                {form.watch('prizeChoice') === 'premium' && (
+                  <div className="responsive-grid">
+                    <FormField
+                      control={form.control}
+                      name="premiumCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>تعداد اشتراک *</FormLabel>
+                          <FormControl>
+                            <Input type="number" min={1} value={field.value as any || ''} onChange={e => field.onChange(Number(e.target.value) || undefined)} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="premiumDurationMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>مدت زمان هر اشتراک *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="انتخاب مدت" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="3">۳ ماهه</SelectItem>
+                              <SelectItem value="6">۶ ماهه</SelectItem>
+                              <SelectItem value="12">۱۲ ماهه</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <FormField
+                  control={form.control}
+                  name="allCountries"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>کشورهای واجد شرایط *</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} />
+                        <span>تمامی کشورها</span>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {!form.watch('allCountries') && (
+                  <FormField
+                    control={form.control}
+                    name="selectedCountries"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>انتخاب کشورها (یک یا چند)</FormLabel>
+                        <FormControl>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-2 border rounded-md">
+                            {[
+                              { code: 'IR', name: 'ایران', flag: '🇮🇷' },
+                              { code: 'TR', name: 'ترکیه', flag: '🇹🇷' },
+                              { code: 'AE', name: 'امارات', flag: '🇦🇪' },
+                              { code: 'US', name: 'آمریکا', flag: '🇺🇸' },
+                              { code: 'DE', name: 'آلمان', flag: '🇩🇪' },
+                              { code: 'RU', name: 'روسیه', flag: '🇷🇺' },
+                            ].map((c) => (
+                              <label key={c.code} className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={field.value?.includes(c.code) || false}
+                                  onChange={(e) => {
+                                    const current = new Set(field.value || []);
+                                    if (e.target.checked) current.add(c.code); else current.delete(c.code);
+                                    field.onChange(Array.from(current));
+                                  }}
+                                />
+                                <span>{c.flag} {c.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
               
               <DialogFooter className="gap-2">
