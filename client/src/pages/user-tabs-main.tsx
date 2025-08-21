@@ -53,7 +53,11 @@ import { format } from "date-fns";
 
 // Form schema for raffle submission
 const raffleFormSchema = z.object({
-  messageUrl: z.string().min(1, "لینک پیام قرعه‌کشی الزامی است"),
+  messageUrl: z.string()
+    .min(1, "لینک پیام قرعه‌کشی الزامی است")
+    .refine((url) => url.startsWith('https://t.me/'), {
+      message: "لینک باید با https://t.me/ شروع شود"
+    }),
 });
 
 type RaffleFormData = z.infer<typeof raffleFormSchema>;
@@ -181,15 +185,25 @@ export default function UserTabsMainPage() {
         body: JSON.stringify(requestData),
       });
 
-      if (!response.ok) throw new Error('Failed to submit raffle');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Raffle submission error:', errorData);
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
       return await response.json();
     },
     onSuccess: () => {
       toast({ title: "قرعه‌کشی با موفقیت ارسال شد و در انتظار تایید است" });
       form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/raffles/submitted'] });
     },
-    onError: () => {
-      toast({ title: "خطا در ارسال قرعه‌کشی", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Raffle submission error:', error);
+      toast({ 
+        title: "خطا در ارسال قرعه‌کشی", 
+        description: error.message || "خطای نامشخص رخ داده است",
+        variant: "destructive" 
+      });
     },
   });
 
