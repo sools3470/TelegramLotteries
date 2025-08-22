@@ -104,10 +104,13 @@ export default function AdminPanel() {
   // Scroll to top function
   const scrollToTop = () => {
     try {
-      // Find the main scrollable container for admin panel
-      const mainContainer = document.querySelector('.main-content') || document.querySelector('.app-container') || document.querySelector('[data-radix-tabs-content]');
-      if (mainContainer) {
-        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      // Find the main scrollable container for admin panel - check tab content first
+      const tabContent = document.querySelector('[data-radix-tabs-content]') || 
+                        document.querySelector('.tab-content-enter') ||
+                        document.querySelector('.main-content') || 
+                        document.querySelector('.app-container');
+      if (tabContent) {
+        tabContent.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         // Fallback to window scroll
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -120,12 +123,15 @@ export default function AdminPanel() {
   // Scroll event handler
   useEffect(() => {
     const handleScroll = () => {
-      // Check scroll on the main container for admin panel
-      const mainContainer = document.querySelector('.main-content') || document.querySelector('.app-container') || document.querySelector('[data-radix-tabs-content]');
+      // Check scroll on tab content containers first
+      const tabContent = document.querySelector('[data-radix-tabs-content]') || 
+                        document.querySelector('.tab-content-enter') ||
+                        document.querySelector('.main-content') || 
+                        document.querySelector('.app-container');
       let scrollY = 0;
       
-      if (mainContainer) {
-        scrollY = mainContainer.scrollTop;
+      if (tabContent) {
+        scrollY = tabContent.scrollTop;
       } else {
         scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
       }
@@ -135,11 +141,14 @@ export default function AdminPanel() {
       setShowScrollToTop(scrollY > scrollThreshold);
     };
 
-    // Add scroll listener to the main container
-    const mainContainer = document.querySelector('.main-content') || document.querySelector('.app-container') || document.querySelector('[data-radix-tabs-content]');
-    if (mainContainer) {
-      mainContainer.addEventListener('scroll', handleScroll, { passive: true });
-      return () => mainContainer.removeEventListener('scroll', handleScroll);
+    // Add scroll listener to tab content containers
+    const tabContent = document.querySelector('[data-radix-tabs-content]') || 
+                      document.querySelector('.tab-content-enter') ||
+                      document.querySelector('.main-content') || 
+                      document.querySelector('.app-container');
+    if (tabContent) {
+      tabContent.addEventListener('scroll', handleScroll, { passive: true });
+      return () => tabContent.removeEventListener('scroll', handleScroll);
     } else {
       // Fallback to document scroll
       document.addEventListener('scroll', handleScroll, { passive: true });
@@ -651,6 +660,25 @@ export default function AdminPanel() {
         )}
       </div>
 
+      {/* Scroll to Top Button - for admin */}
+      {showScrollToTop && (
+        <div 
+          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]"
+          style={{ pointerEvents: "auto" }}
+        >
+          <Button
+            onClick={scrollToTop}
+            className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            title="برو بالا"
+            aria-label="برو بالا"
+            style={{ pointerEvents: "auto" }}
+          >
+            <ArrowUp size={18} className="text-black dark:text-white" />
+            <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">برو بالا</span>
+          </Button>
+        </div>
+      )}
+
       {/* Bottom Navigation */}
       <AdminBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -758,25 +786,6 @@ export default function AdminPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Scroll to Top Button - for admin */}
-      {showScrollToTop && (
-        <div 
-          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]"
-          style={{ pointerEvents: "auto" }}
-        >
-          <Button
-            onClick={scrollToTop}
-            className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
-            title="برو بالا"
-            aria-label="برو بالا"
-            style={{ pointerEvents: "auto" }}
-          >
-            <ArrowUp size={18} className="text-black dark:text-white" />
-            <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">برو بالا</span>
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
