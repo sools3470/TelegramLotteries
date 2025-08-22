@@ -1469,10 +1469,29 @@ async function registerRoutes(app2) {
         const payload = newSchema.parse(req.body);
         const allPending = await storage.getRafflesByStatus("pending");
         const allApproved = await storage.getRafflesByStatus("approved");
-        const all = [...allPending, ...allApproved];
-        const duplicate2 = all.find((r) => r.originalData?.messageUrl === payload.messageUrl);
+        const allRejected = await storage.getRafflesByStatus("rejected");
+        const allRaffles2 = [...allPending, ...allApproved, ...allRejected];
+        const duplicate2 = allRaffles2.find((r) => r.originalData?.messageUrl === payload.messageUrl);
         if (duplicate2) {
-          return res.status(400).json({ message: "Raffle with this messageUrl already exists" });
+          const isSameUser = duplicate2.submitterId === payload.submitterId;
+          const status = duplicate2.status;
+          if (status === "rejected") {
+            return res.status(400).json({
+              message: "\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0646\u0627\u0645\u0639\u062A\u0628\u0631 \u0627\u0633\u062A. \u0644\u0637\u0641\u0627 \u0641\u0642\u0637 \u0644\u06CC\u0646\u06A9 \u067E\u06CC\u0627\u0645 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0647\u0627\u06CC \u0631\u0633\u0645\u06CC \u062A\u0644\u06AF\u0631\u0627\u0645 \u0631\u0627 \u0648\u0627\u0631\u062F \u06A9\u0646\u06CC\u062F."
+            });
+          } else if (status === "approved" || status === "pending") {
+            if (isSameUser) {
+              const statusText = status === "approved" ? "\u0645\u0646\u062A\u0634\u0631 \u0634\u062F\u0647" : "\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u0628\u0631\u0631\u0633\u06CC";
+              return res.status(400).json({
+                message: `\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u062A\u06A9\u0631\u0627\u0631\u06CC\u0633\u062A \u0648 \u0642\u0628\u0644\u0627 \u062A\u0648\u0633\u0637 \u0634\u0645\u0627 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0627\u0633\u062A. \u0648\u0636\u0639\u06CC\u062A: ${statusText}`
+              });
+            } else {
+              const statusText = status === "approved" ? "\u0645\u0646\u062A\u0634\u0631 \u0634\u062F\u0647" : "\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u0628\u0631\u0631\u0633\u06CC";
+              return res.status(400).json({
+                message: `\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u062A\u06A9\u0631\u0627\u0631\u06CC\u0633\u062A \u0648 \u0642\u0628\u0644\u0627 \u062A\u0648\u0633\u0637 \u0633\u0627\u06CC\u0631 \u06A9\u0627\u0631\u0628\u0631\u0627\u0646 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0627\u0633\u062A. \u0648\u0636\u0639\u06CC\u062A: ${statusText}`
+              });
+            }
+          }
         }
         const legacy = {
           channelId: "@unknown",

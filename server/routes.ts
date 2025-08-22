@@ -106,13 +106,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Duplicate check by messageUrl (stored inside originalData in legacy DB)
+        // Comprehensive duplicate check by messageUrl across all statuses
         const allPending = await storage.getRafflesByStatus("pending");
         const allApproved = await storage.getRafflesByStatus("approved");
-        const all = [...allPending, ...allApproved];
-        const duplicate = all.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        const allRejected = await storage.getRafflesByStatus("rejected");
+        const allRaffles = [...allPending, ...allApproved, ...allRejected];
+        
+        const duplicate = allRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        
         if (duplicate) {
-          return res.status(400).json({ message: "Raffle with this messageUrl already exists" });
+          const isSameUser = duplicate.submitterId === payload.submitterId;
+          const status = duplicate.status;
+          
+          if (status === "rejected") {
+            return res.status(400).json({ 
+              message: "این قرعه‌کشی نامعتبر است. لطفا فقط لینک پیام قرعه‌کشی های رسمی تلگرام را وارد کنید." 
+            });
+          } else if (status === "approved" || status === "pending") {
+            if (isSameUser) {
+              const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
+              return res.status(400).json({ 
+                message: `این قرعه‌کشی تکراریست و قبلا توسط شما ارسال شده است. وضعیت: ${statusText}` 
+              });
+            } else {
+              const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
+              return res.status(400).json({ 
+                message: `این قرعه‌کشی تکراریست و قبلا توسط سایر کاربران ارسال شده است. وضعیت: ${statusText}` 
+              });
+            }
+          }
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids
