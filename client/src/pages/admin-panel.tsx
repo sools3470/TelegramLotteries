@@ -104,8 +104,8 @@ export default function AdminPanel() {
   // Scroll to top function
   const scrollToTop = () => {
     try {
-      // Find the main scrollable container
-      const mainContainer = document.querySelector('.tab-content-enter') || document.querySelector('[data-radix-tabs-content]');
+      // Find the main scrollable container for admin panel
+      const mainContainer = document.querySelector('.main-content') || document.querySelector('.app-container') || document.querySelector('[data-radix-tabs-content]');
       if (mainContainer) {
         mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -120,8 +120,8 @@ export default function AdminPanel() {
   // Scroll event handler
   useEffect(() => {
     const handleScroll = () => {
-      // Check scroll on the main container
-      const mainContainer = document.querySelector('.tab-content-enter') || document.querySelector('[data-radix-tabs-content]');
+      // Check scroll on the main container for admin panel
+      const mainContainer = document.querySelector('.main-content') || document.querySelector('.app-container') || document.querySelector('[data-radix-tabs-content]');
       let scrollY = 0;
       
       if (mainContainer) {
@@ -136,7 +136,7 @@ export default function AdminPanel() {
     };
 
     // Add scroll listener to the main container
-    const mainContainer = document.querySelector('.tab-content-enter') || document.querySelector('[data-radix-tabs-content]');
+    const mainContainer = document.querySelector('.main-content') || document.querySelector('.app-container') || document.querySelector('[data-radix-tabs-content]');
     if (mainContainer) {
       mainContainer.addEventListener('scroll', handleScroll, { passive: true });
       return () => mainContainer.removeEventListener('scroll', handleScroll);
@@ -762,18 +762,18 @@ export default function AdminPanel() {
       {/* Scroll to Top Button - for admin */}
       {showScrollToTop && (
         <div 
-          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] animate-slideUp"
-          style={{ opacity: 1, transform: "translateY(0) translateX(-50%)", pointerEvents: "auto" }}
+          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]"
+          style={{ pointerEvents: "auto" }}
         >
           <Button
             onClick={scrollToTop}
             className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
-            title="به بالا"
-            aria-label="به بالا"
+            title="برو بالا"
+            aria-label="برو بالا"
             style={{ pointerEvents: "auto" }}
           >
             <ArrowUp size={18} className="text-black dark:text-white" />
-            <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">به بالا</span>
+            <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">برو بالا</span>
           </Button>
         </div>
       )}
