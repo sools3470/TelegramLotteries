@@ -76,72 +76,52 @@ export default function UserTabsMainPage() {
   // Scroll to top function
   const scrollToTop = () => {
     console.log('Scroll to top clicked');
-    alert('Scroll to top button clicked!'); // Simple test
     try {
-      console.log('Current scroll position:', window.scrollY);
-      console.log('Document height:', document.documentElement.scrollHeight);
-      console.log('Window height:', window.innerHeight);
-      console.log('Can scroll:', document.documentElement.scrollHeight > window.innerHeight);
-      
-      // Check if page is actually scrollable
-      if (document.documentElement.scrollHeight <= window.innerHeight) {
-        alert('شما در ابتدای صفحه هستید! صفحه نیازی به اسکرول ندارد.');
-        return;
+      // Find the main scrollable container
+      const mainContainer = document.querySelector('.tab-content-enter');
+      if (mainContainer) {
+        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        console.log('Scrolled main container to top');
+      } else {
+        // Fallback to window scroll
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        console.log('Scrolled window to top');
       }
-      
-      // Try multiple scroll methods
-      console.log('Trying window.scrollTo(0, 0)');
-      window.scrollTo(0, 0);
-      
-      console.log('Trying document.documentElement.scrollTop = 0');
-      document.documentElement.scrollTop = 0;
-      
-      console.log('Trying document.body.scrollTop = 0');
-      document.body.scrollTop = 0;
-      
-      console.log('Trying window.scroll(0, 0)');
-      window.scroll(0, 0);
-      
-      // Check if it worked
-      setTimeout(() => {
-        console.log('New scroll position:', window.scrollY);
-        console.log('New documentElement.scrollTop:', document.documentElement.scrollTop);
-        console.log('New body.scrollTop:', document.body.scrollTop);
-        
-        if (window.scrollY === 0 && document.documentElement.scrollTop === 0) {
-          alert('Scroll to top successful! Position: ' + window.scrollY);
-        } else {
-          alert('Scroll to top failed. Window: ' + window.scrollY + ', Document: ' + document.documentElement.scrollTop + ', Body: ' + document.body.scrollTop);
-        }
-      }, 100);
-      
     } catch (error) {
       console.error('Scroll to top error:', error);
-      alert('Scroll error: ' + error.message);
     }
   };
 
   // Scroll event handler
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
-      const scrollThreshold = 1; // Show buttons after 1px scroll
+      // Check scroll on the main container
+      const mainContainer = document.querySelector('.tab-content-enter');
+      let scrollY = 0;
       
+      if (mainContainer) {
+        scrollY = mainContainer.scrollTop;
+      } else {
+        scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+      }
+      
+      const scrollThreshold = 1;
       console.log('Scroll detected:', scrollY, 'Threshold:', scrollThreshold);
-      console.log('Should show buttons:', scrollY > scrollThreshold);
       
       setShowSupportButton(scrollY > scrollThreshold);
       setShowScrollToTop(scrollY > scrollThreshold);
     };
 
-    // Always show buttons since page doesn't scroll
-    console.log('Setting buttons to true - page is not scrollable');
-    setShowSupportButton(true);
-    setShowScrollToTop(true);
-
-    // Add scroll listener to document instead of window
-    document.addEventListener('scroll', handleScroll, { passive: true });
-    return () => document.removeEventListener('scroll', handleScroll);
+    // Add scroll listener to the main container
+    const mainContainer = document.querySelector('.tab-content-enter');
+    if (mainContainer) {
+      mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+      return () => mainContainer.removeEventListener('scroll', handleScroll);
+    } else {
+      // Fallback to document scroll
+      document.addEventListener('scroll', handleScroll, { passive: true });
+      return () => document.removeEventListener('scroll', handleScroll);
+    }
   }, []);
 
   const form = useForm<RaffleFormData>({
