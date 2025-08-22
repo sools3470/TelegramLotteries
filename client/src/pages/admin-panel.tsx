@@ -742,14 +742,15 @@ export default function AdminPanel() {
       {/* Scroll to Top Button - for admin */}
       {showScrollToTop && (
         <div 
-          className="fixed bottom-20 left-4 z-50 animate-slideUp"
-          style={{ opacity: 1, transform: "translateY(0)" }}
+          className="fixed bottom-20 left-4 z-[9999] animate-slideUp"
+          style={{ opacity: 1, transform: "translateY(0)", pointerEvents: "auto" }}
         >
           <Button
             onClick={scrollToTop}
-            className="flex items-center gap-2 bg-telegram-blue hover:bg-telegram-blue/90 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 bg-telegram-blue hover:bg-telegram-blue/90 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
             title="به بالا"
             aria-label="به بالا"
+            style={{ pointerEvents: "auto" }}
           >
             <ArrowUp size={20} className="text-white" />
             <span className="text-sm font-medium whitespace-nowrap text-white">به بالا</span>
@@ -758,13 +759,14 @@ export default function AdminPanel() {
       )}
 
       {/* Debug info for admin */}
-      <div className="fixed top-4 right-4 z-50 bg-black text-white p-2 text-xs">
+      <div className="fixed top-4 right-4 z-[9999] bg-black text-white p-2 text-xs" style={{ pointerEvents: "auto" }}>
         <div>showScrollToTop: {showScrollToTop ? 'true' : 'false'}</div>
         <div>userType: {user?.userType}</div>
         <div>scrollY: {typeof window !== 'undefined' ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) : 'N/A'}</div>
         <button 
           onClick={scrollToTop}
-          className="mt-2 bg-red-500 text-white px-2 py-1 text-xs"
+          className="mt-2 bg-red-500 text-white px-2 py-1 text-xs cursor-pointer"
+          style={{ pointerEvents: "auto" }}
         >
           Test Scroll to Top
         </button>
