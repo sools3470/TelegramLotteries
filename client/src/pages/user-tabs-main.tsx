@@ -75,17 +75,14 @@ export default function UserTabsMainPage() {
 
   // Scroll to top function
   const scrollToTop = () => {
-    console.log('Scroll to top clicked');
     try {
       // Find the main scrollable container
       const mainContainer = document.querySelector('.tab-content-enter');
       if (mainContainer) {
         mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
-        console.log('Scrolled main container to top');
       } else {
         // Fallback to window scroll
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        console.log('Scrolled window to top');
       }
     } catch (error) {
       console.error('Scroll to top error:', error);
@@ -106,7 +103,6 @@ export default function UserTabsMainPage() {
       }
       
       const scrollThreshold = 1;
-      console.log('Scroll detected:', scrollY, 'Threshold:', scrollThreshold);
       
       setShowSupportButton(scrollY > scrollThreshold);
       setShowScrollToTop(scrollY > scrollThreshold);
@@ -943,20 +939,18 @@ export default function UserTabsMainPage() {
         {/* Scroll to Top Button - for all users */}
         {showScrollToTop && (
           <div 
-            className={`fixed left-4 z-[9999] animate-slideUp ${
-              user?.userType !== "bot_admin" && showSupportButton ? "bottom-36" : "bottom-20"
-            }`}
-            style={{ opacity: 1, transform: "translateY(0)", pointerEvents: "auto" }}
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] animate-slideUp"
+            style={{ opacity: 1, transform: "translateY(0) translateX(-50%)", pointerEvents: "auto" }}
           >
             <Button
               onClick={scrollToTop}
-              className="flex items-center gap-2 bg-telegram-blue hover:bg-telegram-blue/90 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+              className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
               title="به بالا"
               aria-label="به بالا"
               style={{ pointerEvents: "auto" }}
             >
-              <ArrowUp size={20} className="text-white" />
-              <span className="text-sm font-medium whitespace-nowrap text-white">به بالا</span>
+              <ArrowUp size={18} className="text-black dark:text-white" />
+              <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">به بالا</span>
             </Button>
           </div>
         )}

@@ -103,28 +103,48 @@ export default function AdminPanel() {
 
   // Scroll to top function
   const scrollToTop = () => {
-    console.log('Admin scroll to top clicked');
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    try {
+      // Find the main scrollable container
+      const mainContainer = document.querySelector('.tab-content-enter') || document.querySelector('[data-radix-tabs-content]');
+      if (mainContainer) {
+        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to window scroll
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error('Scroll to top error:', error);
+    }
   };
 
   // Scroll event handler
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+      // Check scroll on the main container
+      const mainContainer = document.querySelector('.tab-content-enter') || document.querySelector('[data-radix-tabs-content]');
+      let scrollY = 0;
+      
+      if (mainContainer) {
+        scrollY = mainContainer.scrollTop;
+      } else {
+        scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+      }
+      
       const scrollThreshold = 1;
       
-      console.log('Admin scroll detected:', scrollY);
       setShowScrollToTop(scrollY > scrollThreshold);
     };
 
-    // Test scroll button
-    setShowScrollToTop(true);
-
-    document.addEventListener('scroll', handleScroll, { passive: true });
-    return () => document.removeEventListener('scroll', handleScroll);
+    // Add scroll listener to the main container
+    const mainContainer = document.querySelector('.tab-content-enter') || document.querySelector('[data-radix-tabs-content]');
+    if (mainContainer) {
+      mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+      return () => mainContainer.removeEventListener('scroll', handleScroll);
+    } else {
+      // Fallback to document scroll
+      document.addEventListener('scroll', handleScroll, { passive: true });
+      return () => document.removeEventListener('scroll', handleScroll);
+    }
   }, []);
 
   // Queries
@@ -742,35 +762,21 @@ export default function AdminPanel() {
       {/* Scroll to Top Button - for admin */}
       {showScrollToTop && (
         <div 
-          className="fixed bottom-20 left-4 z-[9999] animate-slideUp"
-          style={{ opacity: 1, transform: "translateY(0)", pointerEvents: "auto" }}
+          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] animate-slideUp"
+          style={{ opacity: 1, transform: "translateY(0) translateX(-50%)", pointerEvents: "auto" }}
         >
           <Button
             onClick={scrollToTop}
-            className="flex items-center gap-2 bg-telegram-blue hover:bg-telegram-blue/90 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
             title="به بالا"
             aria-label="به بالا"
             style={{ pointerEvents: "auto" }}
           >
-            <ArrowUp size={20} className="text-white" />
-            <span className="text-sm font-medium whitespace-nowrap text-white">به بالا</span>
+            <ArrowUp size={18} className="text-black dark:text-white" />
+            <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">به بالا</span>
           </Button>
         </div>
       )}
-
-      {/* Debug info for admin */}
-      <div className="fixed top-4 right-4 z-[9999] bg-black text-white p-2 text-xs" style={{ pointerEvents: "auto" }}>
-        <div>showScrollToTop: {showScrollToTop ? 'true' : 'false'}</div>
-        <div>userType: {user?.userType}</div>
-        <div>scrollY: {typeof window !== 'undefined' ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) : 'N/A'}</div>
-        <button 
-          onClick={scrollToTop}
-          className="mt-2 bg-red-500 text-white px-2 py-1 text-xs cursor-pointer"
-          style={{ pointerEvents: "auto" }}
-        >
-          Test Scroll to Top
-        </button>
-      </div>
     </div>
   );
 }
