@@ -446,6 +446,7 @@ var init_storage = __esm({
           reviewerId: raffles.reviewerId,
           status: raffles.status,
           rejectionReason: raffles.rejectionReason,
+          originalData: raffles.originalData,
           createdAt: raffles.createdAt,
           updatedAt: raffles.updatedAt,
           submitter: {
@@ -474,6 +475,7 @@ var init_storage = __esm({
           reviewerId: raffles.reviewerId,
           status: raffles.status,
           rejectionReason: raffles.rejectionReason,
+          originalData: raffles.originalData,
           createdAt: raffles.createdAt,
           updatedAt: raffles.updatedAt,
           submitter: {
@@ -1471,8 +1473,17 @@ async function registerRoutes(app2) {
         const allApproved = await storage.getRafflesByStatus("approved");
         const allRejected = await storage.getRafflesByStatus("rejected");
         const allRaffles2 = [...allPending, ...allApproved, ...allRejected];
+        console.log("Checking for duplicates. Total raffles:", allRaffles2.length);
+        console.log("Looking for messageUrl:", payload.messageUrl);
+        console.log("All raffles originalData:", allRaffles2.map((r) => ({
+          id: r.id,
+          messageUrl: r.originalData?.messageUrl,
+          status: r.status,
+          submitterId: r.submitterId
+        })));
         const duplicate2 = allRaffles2.find((r) => r.originalData?.messageUrl === payload.messageUrl);
         if (duplicate2) {
+          console.log("Found duplicate:", duplicate2);
           const isSameUser = duplicate2.submitterId === payload.submitterId;
           const status = duplicate2.status;
           if (status === "rejected") {
@@ -1492,6 +1503,8 @@ async function registerRoutes(app2) {
               });
             }
           }
+        } else {
+          console.log("No duplicate found, proceeding with creation");
         }
         const legacy = {
           channelId: "@unknown",

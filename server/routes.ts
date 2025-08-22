@@ -112,9 +112,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const allRejected = await storage.getRafflesByStatus("rejected");
         const allRaffles = [...allPending, ...allApproved, ...allRejected];
         
+        console.log('Checking for duplicates. Total raffles:', allRaffles.length);
+        console.log('Looking for messageUrl:', payload.messageUrl);
+        console.log('All raffles originalData:', allRaffles.map(r => ({ 
+          id: r.id, 
+          messageUrl: r.originalData?.messageUrl, 
+          status: r.status,
+          submitterId: r.submitterId 
+        })));
+        
         const duplicate = allRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
         
         if (duplicate) {
+          console.log('Found duplicate:', duplicate);
           const isSameUser = duplicate.submitterId === payload.submitterId;
           const status = duplicate.status;
           
@@ -135,6 +145,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             }
           }
+        } else {
+          console.log('No duplicate found, proceeding with creation');
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids

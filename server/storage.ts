@@ -220,6 +220,7 @@ export class DatabaseStorage implements IStorage {
       reviewerId: raffles.reviewerId,
       status: raffles.status,
       rejectionReason: raffles.rejectionReason,
+      originalData: raffles.originalData,
       createdAt: raffles.createdAt,
       updatedAt: raffles.updatedAt,
       submitter: {
@@ -251,6 +252,7 @@ export class DatabaseStorage implements IStorage {
       reviewerId: raffles.reviewerId,
       status: raffles.status,
       rejectionReason: raffles.rejectionReason,
+      originalData: raffles.originalData,
       createdAt: raffles.createdAt,
       updatedAt: raffles.updatedAt,
       submitter: {
