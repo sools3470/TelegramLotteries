@@ -899,10 +899,12 @@ export default function UserTabsMainPage() {
           </div>
         )}
 
-        {/* Scroll to Top Button */}
+        {/* Scroll to Top Button - for all users */}
         {showScrollToTop && (
           <div 
-            className="fixed bottom-36 left-4 z-50 animate-slideUp"
+            className={`fixed left-4 z-50 animate-slideUp ${
+              user?.userType !== "bot_admin" && showSupportButton ? "bottom-36" : "bottom-20"
+            }`}
             style={{ opacity: 1, transform: "translateY(0)" }}
           >
             <Button
