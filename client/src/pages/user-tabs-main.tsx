@@ -77,7 +77,10 @@ export default function UserTabsMainPage() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const scrollThreshold = 0; // Show buttons immediately when scrolling starts
+      const scrollThreshold = 1; // Show buttons after 1px scroll
+      
+      console.log('Scroll detected:', scrollY, 'Threshold:', scrollThreshold);
+      console.log('Should show buttons:', scrollY > scrollThreshold);
       
       setShowSupportButton(scrollY > scrollThreshold);
       setShowScrollToTop(scrollY > scrollThreshold);
@@ -930,6 +933,14 @@ export default function UserTabsMainPage() {
             </Button>
           </div>
         )}
+
+        {/* Debug info */}
+        <div className="fixed top-4 right-4 z-50 bg-black text-white p-2 text-xs">
+          <div>showSupportButton: {showSupportButton ? 'true' : 'false'}</div>
+          <div>showScrollToTop: {showScrollToTop ? 'true' : 'false'}</div>
+          <div>userType: {user?.userType}</div>
+          <div>scrollY: {typeof window !== 'undefined' ? window.scrollY : 'N/A'}</div>
+        </div>
     </div>
   );
 }
