@@ -38,9 +38,12 @@ import {
   UserMinus,
   Activity,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  ArrowUp,
+  Channel
 } from "lucide-react";
 import { format } from "date-fns";
+import { useEffect } from "react";
 
 interface AdminBottomNavProps {
   activeTab: string;
@@ -96,6 +99,33 @@ export default function AdminPanel() {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    console.log('Admin scroll to top clicked');
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Scroll event handler
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+      const scrollThreshold = 1;
+      
+      console.log('Admin scroll detected:', scrollY);
+      setShowScrollToTop(scrollY > scrollThreshold);
+    };
+
+    // Test scroll button
+    setShowScrollToTop(true);
+
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    return () => document.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Queries
   const { data: pendingRaffles = [], isLoading: pendingLoading } = useQuery({
@@ -708,6 +738,37 @@ export default function AdminPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Scroll to Top Button - for admin */}
+      {showScrollToTop && (
+        <div 
+          className="fixed bottom-20 left-4 z-50 animate-slideUp"
+          style={{ opacity: 1, transform: "translateY(0)" }}
+        >
+          <Button
+            onClick={scrollToTop}
+            className="flex items-center gap-2 bg-telegram-blue hover:bg-telegram-blue/90 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+            title="به بالا"
+            aria-label="به بالا"
+          >
+            <ArrowUp size={20} className="text-white" />
+            <span className="text-sm font-medium whitespace-nowrap text-white">به بالا</span>
+          </Button>
+        </div>
+      )}
+
+      {/* Debug info for admin */}
+      <div className="fixed top-4 right-4 z-50 bg-black text-white p-2 text-xs">
+        <div>showScrollToTop: {showScrollToTop ? 'true' : 'false'}</div>
+        <div>userType: {user?.userType}</div>
+        <div>scrollY: {typeof window !== 'undefined' ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) : 'N/A'}</div>
+        <button 
+          onClick={scrollToTop}
+          className="mt-2 bg-red-500 text-white px-2 py-1 text-xs"
+        >
+          Test Scroll to Top
+        </button>
+      </div>
     </div>
   );
 }

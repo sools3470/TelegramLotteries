@@ -73,10 +73,19 @@ export default function UserTabsMainPage() {
   const [showSupportButton, setShowSupportButton] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
+  // Scroll to top function
+  const scrollToTop = () => {
+    console.log('Scroll to top clicked');
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   // Scroll event handler
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY;
+      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
       const scrollThreshold = 1; // Show buttons after 1px scroll
       
       console.log('Scroll detected:', scrollY, 'Threshold:', scrollThreshold);
@@ -91,17 +100,10 @@ export default function UserTabsMainPage() {
     setShowSupportButton(true);
     setShowScrollToTop(true);
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Add scroll listener to document instead of window
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    return () => document.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Scroll to top function
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
 
   const form = useForm<RaffleFormData>({
     resolver: zodResolver(raffleFormSchema),
@@ -944,7 +946,13 @@ export default function UserTabsMainPage() {
           <div>showSupportButton: {showSupportButton ? 'true' : 'false'}</div>
           <div>showScrollToTop: {showScrollToTop ? 'true' : 'false'}</div>
           <div>userType: {user?.userType}</div>
-          <div>scrollY: {typeof window !== 'undefined' ? window.scrollY : 'N/A'}</div>
+          <div>scrollY: {typeof window !== 'undefined' ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) : 'N/A'}</div>
+          <button 
+            onClick={scrollToTop}
+            className="mt-2 bg-red-500 text-white px-2 py-1 text-xs"
+          >
+            Test Scroll to Top
+          </button>
         </div>
     </div>
   );
