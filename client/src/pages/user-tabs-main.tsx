@@ -85,7 +85,7 @@ export default function UserTabsMainPage() {
       
       // Check if page is actually scrollable
       if (document.documentElement.scrollHeight <= window.innerHeight) {
-        alert('Page is not scrollable! Document height: ' + document.documentElement.scrollHeight + ', Window height: ' + window.innerHeight);
+        alert('شما در ابتدای صفحه هستید! صفحه نیازی به اسکرول ندارد.');
         return;
       }
       
@@ -134,8 +134,8 @@ export default function UserTabsMainPage() {
       setShowScrollToTop(scrollY > scrollThreshold);
     };
 
-    // Test if buttons work by showing them immediately
-    console.log('Setting buttons to true for testing');
+    // Always show buttons since page doesn't scroll
+    console.log('Setting buttons to true - page is not scrollable');
     setShowSupportButton(true);
     setShowScrollToTop(true);
 
@@ -980,32 +980,6 @@ export default function UserTabsMainPage() {
             </Button>
           </div>
         )}
-
-        {/* Debug info */}
-        <div className="fixed top-4 right-4 z-[9999] bg-black text-white p-2 text-xs" style={{ pointerEvents: "auto" }}>
-          <div>showSupportButton: {showSupportButton ? 'true' : 'false'}</div>
-          <div>showScrollToTop: {showScrollToTop ? 'true' : 'false'}</div>
-          <div>userType: {user?.userType}</div>
-          <div>scrollY: {typeof window !== 'undefined' ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) : 'N/A'}</div>
-          <div>docHeight: {typeof window !== 'undefined' ? document.documentElement.scrollHeight : 'N/A'}</div>
-          <div>winHeight: {typeof window !== 'undefined' ? window.innerHeight : 'N/A'}</div>
-          <div>canScroll: {typeof window !== 'undefined' ? (document.documentElement.scrollHeight > window.innerHeight ? 'true' : 'false') : 'N/A'}</div>
-          <button 
-            onClick={scrollToTop}
-            className="mt-2 bg-red-500 text-white px-2 py-1 text-xs cursor-pointer"
-            style={{ pointerEvents: "auto" }}
-          >
-            Test Scroll to Top
-          </button>
-        </div>
-
-        {/* Simple test button */}
-        <button 
-          onClick={() => alert('Simple test button works!')}
-          className="fixed top-4 left-4 z-[9999] bg-green-500 text-white px-4 py-2 rounded"
-        >
-          Simple Test
-        </button>
     </div>
   );
 }
