@@ -78,19 +78,30 @@ export default function UserTabsMainPage() {
     console.log('Scroll to top clicked');
     alert('Scroll to top button clicked!'); // Simple test
     try {
-      // Try multiple methods to ensure it works
-      if (window.scrollTo) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (document.documentElement.scrollTo) {
-        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        document.documentElement.scrollTop = 0;
-      }
-      console.log('Scroll to top executed');
+      console.log('Current scroll position:', window.scrollY);
+      
+      // Try instant scroll first (more reliable)
+      window.scrollTo(0, 0);
+      console.log('Instant scroll executed');
+      
+      // Also try setting scrollTop directly
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      console.log('Direct scrollTop set');
+      
+      // Check if it worked
+      setTimeout(() => {
+        console.log('New scroll position:', window.scrollY);
+        if (window.scrollY === 0) {
+          alert('Scroll to top successful!');
+        } else {
+          alert('Scroll to top failed. Current position: ' + window.scrollY);
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Scroll to top error:', error);
-      // Fallback to instant scroll
-      window.scrollTo(0, 0);
+      alert('Scroll error: ' + error.message);
     }
   };
 
