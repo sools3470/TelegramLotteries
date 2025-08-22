@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,8 @@ import {
   Calendar as CalendarIcon,
   MapPin,
   MessageCircle,
-  Settings
+  Settings,
+  ArrowUp
 } from "lucide-react";
 
 import { format } from "date-fns";
@@ -69,6 +70,30 @@ export default function UserTabsMainPage() {
   const [activeTab, setActiveTab] = useState("participate"); // Default to participate tab
   const [submissionFilter, setSubmissionFilter] = useState<string>("all"); // For submitted raffles status filter
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [showSupportButton, setShowSupportButton] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  // Scroll event handler
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const scrollThreshold = 300; // Show buttons after 300px scroll
+      
+      setShowSupportButton(scrollY > scrollThreshold);
+      setShowScrollToTop(scrollY > scrollThreshold);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   const form = useForm<RaffleFormData>({
     resolver: zodResolver(raffleFormSchema),
@@ -857,7 +882,7 @@ export default function UserTabsMainPage() {
         </Tabs>
         
         {/* Enhanced Floating Support Button - only for non-admin users */}
-        {user?.userType !== "bot_admin" && (
+        {user?.userType !== "bot_admin" && showSupportButton && (
           <div 
             className="fixed bottom-20 left-4 z-50 animate-slideUp"
             style={{ opacity: 1, transform: "translateY(0)" }}
@@ -871,6 +896,24 @@ export default function UserTabsMainPage() {
               <MessageCircle size={20} className="text-white" />
               <span className="text-sm font-medium whitespace-nowrap text-white">پشتیبانی</span>
             </button>
+          </div>
+        )}
+
+        {/* Scroll to Top Button */}
+        {showScrollToTop && (
+          <div 
+            className="fixed bottom-36 left-4 z-50 animate-slideUp"
+            style={{ opacity: 1, transform: "translateY(0)" }}
+          >
+            <Button
+              onClick={scrollToTop}
+              className="flex items-center gap-2 bg-telegram-blue hover:bg-telegram-blue/90 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+              title="به بالا"
+              aria-label="به بالا"
+            >
+              <ArrowUp size={20} className="text-white" />
+              <span className="text-sm font-medium whitespace-nowrap text-white">به بالا</span>
+            </Button>
           </div>
         )}
     </div>
