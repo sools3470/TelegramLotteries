@@ -76,6 +76,7 @@ export default function UserTabsMainPage() {
   // Scroll to top function
   const scrollToTop = () => {
     console.log('Scroll to top clicked');
+    alert('Scroll to top button clicked!'); // Simple test
     try {
       // Try multiple methods to ensure it works
       if (window.scrollTo) {
@@ -967,6 +968,14 @@ export default function UserTabsMainPage() {
             Test Scroll to Top
           </button>
         </div>
+
+        {/* Simple test button */}
+        <button 
+          onClick={() => alert('Simple test button works!')}
+          className="fixed top-4 left-4 z-[9999] bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Simple Test
+        </button>
     </div>
   );
 }
