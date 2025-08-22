@@ -111,6 +111,8 @@ export default function UserTabsMainPage() {
       return await response.json();
     },
     enabled: !!user?.id,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true,
   });
 
   const { data: raffles = [], isLoading: rafflesLoading } = useQuery({
@@ -125,21 +127,29 @@ export default function UserTabsMainPage() {
       return await response.json();
     },
     enabled: !!user?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchIntervalInBackground: true,
   });
 
   const { data: seenRaffles = [] } = useQuery({
     queryKey: ['/api/user/seen-raffles', user?.id],
     enabled: !!user?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchIntervalInBackground: true,
   }) as { data: string[] };
 
   const { data: joinedRaffles = [] } = useQuery({
     queryKey: ['/api/user/joined-raffles', user?.id],
     enabled: !!user?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchIntervalInBackground: true,
   }) as { data: string[] };
 
   const { data: sponsorChannels = [] } = useQuery({
     queryKey: ['/api/sponsor-channels'],
     enabled: !!user?.id,
+    refetchInterval: 10000, // Refetch every 10 seconds (less frequent for static data)
+    refetchIntervalInBackground: true,
   }) as { data: any[] };
 
   const { data: submittedRaffles = [] } = useQuery({
@@ -151,6 +161,8 @@ export default function UserTabsMainPage() {
       return await response.json();
     },
     enabled: !!user?.id && activeTab === 'submit',
+    refetchInterval: 3000, // Refetch every 3 seconds for submitted raffles (more frequent)
+    refetchIntervalInBackground: true,
   });
 
   // Generate unique referral link
