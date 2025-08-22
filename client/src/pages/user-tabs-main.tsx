@@ -212,9 +212,15 @@ export default function UserTabsMainPage() {
           // Create base message without status
           const baseMessage = error.message.replace(/وضعیت:\s*.+$/, '').trim();
           
-          // Use alert for colored display (temporary solution)
-          const statusColor = isApproved ? '🟢' : isPending ? '🟡' : '⚪';
-          alert(`${baseMessage}\nوضعیت: ${statusColor} ${status}`);
+          // Use emoji for status color
+          const statusEmoji = isApproved ? '🟢' : isPending ? '🟡' : '⚪';
+          
+          toast({ 
+            title: baseMessage,
+            description: `وضعیت: ${statusEmoji} ${status}`,
+            variant: "destructive",
+            duration: 5000
+          });
           return;
         }
       }
