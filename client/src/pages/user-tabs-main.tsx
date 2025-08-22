@@ -77,7 +77,7 @@ export default function UserTabsMainPage() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const scrollThreshold = 50; // Show buttons after 50px scroll
+      const scrollThreshold = 0; // Show buttons immediately when scrolling starts
       
       setShowSupportButton(scrollY > scrollThreshold);
       setShowScrollToTop(scrollY > scrollThreshold);
