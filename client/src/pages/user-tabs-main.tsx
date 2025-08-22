@@ -188,6 +188,26 @@ export default function UserTabsMainPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Raffle submission error:', errorData);
+        
+        // Check if it's a duplicate error with status information
+        if (errorData.message && errorData.message.includes('وضعیت:')) {
+          const statusMatch = errorData.message.match(/وضعیت:\s*(.+)$/);
+          if (statusMatch) {
+            const status = statusMatch[1].trim();
+            const isApproved = status === 'منتشر شده';
+            const isPending = status === 'در انتظار بررسی';
+            
+            // Create colored status display
+            const statusColor = isApproved ? 'text-green-600' : isPending ? 'text-yellow-600' : 'text-gray-600';
+            const statusDisplay = `<span class="${statusColor} font-semibold">${status}</span>`;
+            
+            // Replace status in message with colored version
+            const coloredMessage = errorData.message.replace(/وضعیت:\s*.+$/, `وضعیت: ${statusDisplay}`);
+            
+            throw new Error(coloredMessage);
+          }
+        }
+        
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
       }
       return await response.json();
@@ -199,11 +219,32 @@ export default function UserTabsMainPage() {
     },
     onError: (error: any) => {
       console.error('Raffle submission error:', error);
-      toast({ 
-        title: "خطا در ارسال قرعه‌کشی", 
-        description: error.message || "خطای نامشخص رخ داده است",
-        variant: "destructive" 
-      });
+      
+      // Check if error message contains HTML (colored status)
+      if (error.message && error.message.includes('<span')) {
+        // For HTML content, we need to use a custom toast or alert
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = error.message;
+        const statusElement = tempDiv.querySelector('span');
+        const statusText = statusElement?.textContent || '';
+        const statusColor = statusElement?.className || '';
+        
+        // Create a custom error message with status
+        const baseMessage = error.message.replace(/<span[^>]*>.*?<\/span>/, '').trim();
+        
+        toast({ 
+          title: baseMessage,
+          description: statusText,
+          variant: "destructive",
+          duration: 5000
+        });
+      } else {
+        toast({ 
+          title: "خطا در ارسال قرعه‌کشی", 
+          description: error.message || "خطای نامشخص رخ داده است",
+          variant: "destructive" 
+        });
+      }
     },
   });
 
