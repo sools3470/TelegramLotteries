@@ -86,6 +86,11 @@ export default function UserTabsMainPage() {
       setShowScrollToTop(scrollY > scrollThreshold);
     };
 
+    // Test if buttons work by showing them immediately
+    console.log('Setting buttons to true for testing');
+    setShowSupportButton(true);
+    setShowScrollToTop(true);
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
