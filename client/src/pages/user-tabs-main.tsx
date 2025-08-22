@@ -79,23 +79,39 @@ export default function UserTabsMainPage() {
     alert('Scroll to top button clicked!'); // Simple test
     try {
       console.log('Current scroll position:', window.scrollY);
+      console.log('Document height:', document.documentElement.scrollHeight);
+      console.log('Window height:', window.innerHeight);
+      console.log('Can scroll:', document.documentElement.scrollHeight > window.innerHeight);
       
-      // Try instant scroll first (more reliable)
+      // Check if page is actually scrollable
+      if (document.documentElement.scrollHeight <= window.innerHeight) {
+        alert('Page is not scrollable! Document height: ' + document.documentElement.scrollHeight + ', Window height: ' + window.innerHeight);
+        return;
+      }
+      
+      // Try multiple scroll methods
+      console.log('Trying window.scrollTo(0, 0)');
       window.scrollTo(0, 0);
-      console.log('Instant scroll executed');
       
-      // Also try setting scrollTop directly
+      console.log('Trying document.documentElement.scrollTop = 0');
       document.documentElement.scrollTop = 0;
+      
+      console.log('Trying document.body.scrollTop = 0');
       document.body.scrollTop = 0;
-      console.log('Direct scrollTop set');
+      
+      console.log('Trying window.scroll(0, 0)');
+      window.scroll(0, 0);
       
       // Check if it worked
       setTimeout(() => {
         console.log('New scroll position:', window.scrollY);
-        if (window.scrollY === 0) {
-          alert('Scroll to top successful!');
+        console.log('New documentElement.scrollTop:', document.documentElement.scrollTop);
+        console.log('New body.scrollTop:', document.body.scrollTop);
+        
+        if (window.scrollY === 0 && document.documentElement.scrollTop === 0) {
+          alert('Scroll to top successful! Position: ' + window.scrollY);
         } else {
-          alert('Scroll to top failed. Current position: ' + window.scrollY);
+          alert('Scroll to top failed. Window: ' + window.scrollY + ', Document: ' + document.documentElement.scrollTop + ', Body: ' + document.body.scrollTop);
         }
       }, 100);
       
@@ -971,6 +987,9 @@ export default function UserTabsMainPage() {
           <div>showScrollToTop: {showScrollToTop ? 'true' : 'false'}</div>
           <div>userType: {user?.userType}</div>
           <div>scrollY: {typeof window !== 'undefined' ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) : 'N/A'}</div>
+          <div>docHeight: {typeof window !== 'undefined' ? document.documentElement.scrollHeight : 'N/A'}</div>
+          <div>winHeight: {typeof window !== 'undefined' ? window.innerHeight : 'N/A'}</div>
+          <div>canScroll: {typeof window !== 'undefined' ? (document.documentElement.scrollHeight > window.innerHeight ? 'true' : 'false') : 'N/A'}</div>
           <button 
             onClick={scrollToTop}
             className="mt-2 bg-red-500 text-white px-2 py-1 text-xs cursor-pointer"
