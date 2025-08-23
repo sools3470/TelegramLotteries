@@ -17,7 +17,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
-import { useEffect } from "react";
 import {
   MessageCircle,
   Star,
@@ -41,8 +40,7 @@ import {
   Filter,
   MoreHorizontal,
   Crown,
-  GripVertical,
-  ArrowUp
+  GripVertical
 } from "lucide-react";
 import {
   DndContext, 
@@ -407,101 +405,11 @@ export default function AdminPanelEnhanced() {
   const [deleteRaffleId, setDeleteRaffleId] = useState<string>("");
   const [bulkDeleteStatus, setBulkDeleteStatus] = useState<string>("");
   const [showReviewDialog, setShowReviewDialog] = useState(false);
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>('');
 
-  // Scroll to top function - Same logic as user-tabs-main - UPDATED
-  const scrollToTop = () => {
-    console.log('=== SCROLL TO TOP FUNCTION CALLED - UPDATED ===');
-    try {
-      // Find the main scrollable container - check multiple selectors
-      const mainContainer = document.querySelector('.tab-content-enter') || 
-                           document.querySelector('[data-radix-tabs-content]') ||
-                           document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                           document.querySelector('[data-state="active"]') ||
-                           document.querySelector('.main-content') ||
-                           document.querySelector('.app-container');
-      
-      console.log('Scroll to top - mainContainer found:', !!mainContainer);
-      
-      if (mainContainer) {
-        console.log('Scroll to top - Before scrollTo, scrollTop:', mainContainer.scrollTop);
-        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
-        console.log('Scroll to top - After scrollTo called');
-        
-        // Check if it worked after a short delay
-        setTimeout(() => {
-          console.log('Scroll to top - After delay, scrollTop:', mainContainer.scrollTop);
-        }, 100);
-      } else {
-        console.log('Scroll to top - No container found, using window scroll');
-        // Fallback to window scroll
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } catch (error) {
-      console.error('Scroll to top error:', error);
-    }
-  };
 
-  // Scroll event handler - Same logic as user-tabs-main
-  useEffect(() => {
-    console.log('Admin: useEffect for scroll listener triggered');
-    console.log('Admin: user?.userType:', user?.userType);
-    console.log('Admin: user?.adminLevel:', user?.adminLevel);
-    
-    const handleScroll = () => {
-      console.log('Admin: handleScroll function called');
-      // Check scroll on multiple containers
-      const mainContainer = document.querySelector('.tab-content-enter') || 
-                           document.querySelector('[data-radix-tabs-content]') ||
-                           document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                           document.querySelector('[data-state="active"]') ||
-                           document.querySelector('.main-content') ||
-                           document.querySelector('.app-container');
-      let scrollY = 0;
-      
-      if (mainContainer) {
-        scrollY = mainContainer.scrollTop;
-        console.log('Admin: Using mainContainer.scrollTop:', scrollY);
-      } else {
-        scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
-        console.log('Admin: Using window/document scroll:', scrollY);
-      }
-      
-      const scrollThreshold = 1;
-      const shouldShow = scrollY > scrollThreshold;
-      
-      console.log('Admin scroll debug:', {
-        userType: user?.userType,
-        adminLevel: user?.adminLevel,
-        mainContainer: !!mainContainer,
-        scrollY,
-        scrollThreshold,
-        shouldShow,
-        currentShowState: showScrollToTop
-      });
-      
-      setShowScrollToTop(shouldShow);
-    };
 
-    // Add scroll listener to multiple containers
-    const mainContainer = document.querySelector('.tab-content-enter') || 
-                         document.querySelector('[data-radix-tabs-content]') ||
-                         document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                         document.querySelector('[data-state="active"]') ||
-                         document.querySelector('.main-content') ||
-                         document.querySelector('.app-container');
-    if (mainContainer) {
-      mainContainer.addEventListener('scroll', handleScroll, { passive: true });
-      console.log('Admin: Added scroll listener to main container');
-      return () => mainContainer.removeEventListener('scroll', handleScroll);
-    } else {
-      // Fallback to document scroll
-      document.addEventListener('scroll', handleScroll, { passive: true });
-      console.log('Admin: Added scroll listener to document');
-      return () => document.removeEventListener('scroll', handleScroll);
-    }
-  }, [user?.userType, user?.adminLevel, showScrollToTop]);
+
+
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
@@ -1017,77 +925,6 @@ export default function AdminPanelEnhanced() {
 
   return (
     <div className="app-container">
-      {/* Debug Panel - for admin */}
-      <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
-        <div>showScrollToTop: {showScrollToTop.toString()}</div>
-        <div>userType: {user?.userType}</div>
-        <div>adminLevel: {user?.adminLevel}</div>
-        <div>activeTab: {activeTab}</div>
-        <div>tabContent: {document.querySelector('[data-radix-tabs-content]') ? 'Found' : 'Not Found'}</div>
-        <div>tabsContent: {document.querySelector('[data-state="active"]') ? 'Found' : 'Not Found'}</div>
-        <div>activeTabContent: {document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ? 'Found' : 'Not Found'}</div>
-        <div>rafflesContent: {document.querySelector('[data-value="raffles"]') ? 'Found' : 'Not Found'}</div>
-        <div>mainContent: {document.querySelector('.main-content') ? 'Found' : 'Not Found'}</div>
-        <div>appContainer: {document.querySelector('.app-container') ? 'Found' : 'Not Found'}</div>
-        <div>scrollY: {(() => {
-          const mainContainer = document.querySelector('.tab-content-enter') || 
-                               document.querySelector('[data-radix-tabs-content]') ||
-                               document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                               document.querySelector('[data-state="active"]') ||
-                               document.querySelector('.main-content') ||
-                               document.querySelector('.app-container');
-          return mainContainer ? mainContainer.scrollTop : (window.scrollY || 0);
-        })()}</div>
-        <div>containerHeight: {(() => {
-          const mainContainer = document.querySelector('.tab-content-enter') || 
-                               document.querySelector('[data-radix-tabs-content]') ||
-                               document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                               document.querySelector('[data-state="active"]') ||
-                               document.querySelector('.main-content') ||
-                               document.querySelector('.app-container');
-          return mainContainer ? `${mainContainer.scrollHeight}/${mainContainer.clientHeight}` : 'N/A';
-        })()}</div>
-        {debugInfo && <div className="mt-2 p-2 bg-red-900 rounded">Debug: {debugInfo}</div>}
-      </div>
-
-      {/* Test Button - Temporary */}
-      <div className="fixed top-4 left-4 z-[9999]">
-        <Button
-          onClick={() => {
-            const mainContainer = document.querySelector('.tab-content-enter') || 
-                                 document.querySelector('[data-radix-tabs-content]') ||
-                                 document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                                 document.querySelector('[data-state="active"]') ||
-                                 document.querySelector('.main-content') ||
-                                 document.querySelector('.app-container');
-            
-            let debugMsg = `Container: ${mainContainer ? 'Found' : 'Not Found'}`;
-            
-            if (mainContainer) {
-              debugMsg += ` | ScrollTop: ${mainContainer.scrollTop}`;
-              debugMsg += ` | Height: ${mainContainer.scrollHeight}/${mainContainer.clientHeight}`;
-              debugMsg += ` | CanScroll: ${mainContainer.scrollHeight > mainContainer.clientHeight}`;
-              
-              // Test manual scroll
-              mainContainer.scrollTop = 100;
-              debugMsg += ` | Set scrollTop to 100`;
-            }
-            
-            // Test scrollToTop function
-            scrollToTop();
-            debugMsg += ` | Called scrollToTop`;
-            
-            // Force re-render
-            setShowScrollToTop(!showScrollToTop);
-            debugMsg += ` | Toggled button`;
-            
-            setDebugInfo(debugMsg);
-          }}
-          className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
-        >
-          Test Scroll
-        </Button>
-      </div>
 
       <div className="main-content p-4 overflow-y-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -2102,24 +1939,7 @@ export default function AdminPanelEnhanced() {
           </DialogContent>
         </Dialog>
 
-        {/* Scroll to Top Button - for admin */}
-        {showScrollToTop && (
-          <div 
-            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]"
-            style={{ pointerEvents: "auto" }}
-          >
-            <Button
-              onClick={scrollToTop}
-              className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
-              title="برو بالا"
-              aria-label="برو بالا"
-              style={{ pointerEvents: "auto" }}
-            >
-              <ArrowUp size={18} className="text-black dark:text-white" />
-              <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">برو بالا</span>
-            </Button>
-          </div>
-        )}
+
       </div>
     </div>
   );
