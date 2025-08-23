@@ -326,6 +326,15 @@ export default function AdminPanel() {
 
   return (
     <div className="app-container bg-telegram-bg">
+      {/* Test Button - Admin Panel */}
+      <div className="fixed top-4 left-4 z-[9999]">
+        <Button
+          className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
+        >
+          صفحه Admin Panel (Level {user?.adminLevel}) ✅
+        </Button>
+      </div>
+
       {/* Debug Panel - Outside main content */}
       <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
         <div>showScrollToTop: {showScrollToTop.toString()}</div>

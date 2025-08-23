@@ -987,7 +987,27 @@ export default function UserTabsMainPage() {
           </div>
         )}
 
+        {/* Test Button - Regular User Page */}
+        {user?.userType !== "bot_admin" && (
+          <div className="fixed top-4 left-4 z-[9999]">
+            <Button
+              className="bg-green-500 hover:bg-green-600 text-white text-xs"
+            >
+              صفحه کاربران عادی ✅
+            </Button>
+          </div>
+        )}
 
+        {/* Test Button - Admin User Page */}
+        {user?.userType === "bot_admin" && (
+          <div className="fixed top-4 left-4 z-[9999]">
+            <Button
+              className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
+            >
+              صفحه مدیران (Level {user?.adminLevel}) ✅
+            </Button>
+          </div>
+        )}
     </div>
   );
 }

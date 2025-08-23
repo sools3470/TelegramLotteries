@@ -918,6 +918,15 @@ export default function AdminPanelEnhanced() {
 
   return (
     <div className="app-container">
+      {/* Test Button - Admin Panel Enhanced */}
+      <div className="fixed top-4 left-4 z-[9999]">
+        <Button
+          className="bg-purple-500 hover:bg-purple-600 text-white text-xs"
+        >
+          صفحه مدیران Enhanced (Level {user?.adminLevel}) ✅
+        </Button>
+      </div>
+
       <div className="main-content p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={`grid w-full mb-6 ${
