@@ -9,11 +9,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { TelegramProvider } from "@/hooks/use-telegram";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { AuthScreen } from "@/components/auth-screen";
-import Home from "@/pages/home";
-import Raffles from "@/pages/raffles";
 import Profile from "@/pages/profile";
-import UserMainPage from "@/pages/user-main";
-import EnhancedUserMainPage from "@/pages/enhanced-user-main";
 import UserTabsMainPage from "@/pages/user-tabs-main";
 import AdminPanelEnhanced from "@/pages/admin-panel-enhanced";
 
