@@ -17,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
+import { useEffect } from "react";
 import {
   MessageCircle,
   Star,
@@ -40,7 +41,8 @@ import {
   Filter,
   MoreHorizontal,
   Crown,
-  GripVertical
+  GripVertical,
+  ArrowUp
 } from "lucide-react";
 import {
   DndContext, 
@@ -391,18 +393,68 @@ export default function AdminPanelEnhanced() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("raffles");
+  const [raffleFilter, setRaffleFilter] = useState("pending");
   const [selectedRaffle, setSelectedRaffle] = useState<any>(null);
-  const [showReviewDialog, setShowReviewDialog] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<'approve' | 'reject' | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<number>(1);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [restrictionType, setRestrictionType] = useState<"none" | "temporary" | "permanent">("none");
+  const [restrictionEnd, setRestrictionEnd] = useState("");
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
-  const [deleteRaffleId, setDeleteRaffleId] = useState<string>("");
-  const [bulkDeleteStatus, setBulkDeleteStatus] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<string>("raffles"); // Default tab only on initial load - mutations preserve current tab
-  const [raffleFilter, setRaffleFilter] = useState<string>("pending");
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
+  // Scroll to top function
+  const scrollToTop = () => {
+    try {
+      // Find the main scrollable container
+      const mainContainer = document.querySelector('.main-content') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.app-container');
+      if (mainContainer) {
+        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to window scroll
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error('Scroll to top error:', error);
+    }
+  };
+
+  // Scroll event handler
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check scroll on the main container
+      const mainContainer = document.querySelector('.main-content') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.app-container');
+      let scrollY = 0;
+      
+      if (mainContainer) {
+        scrollY = mainContainer.scrollTop;
+      } else {
+        scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+      }
+      
+      const scrollThreshold = 1;
+      setShowScrollToTop(scrollY > scrollThreshold);
+    };
+
+    // Add scroll listener to the main container
+    const mainContainer = document.querySelector('.main-content') || 
+                         document.querySelector('[data-radix-tabs-content]') ||
+                         document.querySelector('.app-container');
+    if (mainContainer) {
+      mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+      return () => mainContainer.removeEventListener('scroll', handleScroll);
+    } else {
+      // Fallback to document scroll
+      document.addEventListener('scroll', handleScroll, { passive: true });
+      return () => document.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
@@ -805,15 +857,15 @@ export default function AdminPanelEnhanced() {
   };
 
   const handleDeleteRaffle = (raffleId: string) => {
-    setDeleteRaffleId(raffleId);
+    setSelectedRaffle(null);
     setIsDeleteDialogOpen(true);
   };
 
   const confirmDeleteRaffle = () => {
-    if (deleteRaffleId) {
-      deleteRaffleMutation.mutate(deleteRaffleId);
+    if (selectedRaffle) {
+      deleteRaffleMutation.mutate(selectedRaffle.id);
       setIsDeleteDialogOpen(false);
-      setDeleteRaffleId("");
+      setSelectedRaffle(null);
     }
   };
 
@@ -918,14 +970,7 @@ export default function AdminPanelEnhanced() {
 
   return (
     <div className="app-container">
-      {/* Test Button - Admin Panel Enhanced */}
-      <div className="fixed top-4 left-4 z-[9999]">
-        <Button
-          className="bg-purple-500 hover:bg-purple-600 text-white text-xs"
-        >
-          صفحه مدیران Enhanced (Level {user?.adminLevel}) ✅
-        </Button>
-      </div>
+
 
       <div className="main-content p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -1939,6 +1984,25 @@ export default function AdminPanelEnhanced() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Scroll to Top Button - for admin */}
+        {showScrollToTop && (
+          <div 
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]"
+            style={{ pointerEvents: "auto" }}
+          >
+            <Button
+              onClick={scrollToTop}
+              className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+              title="برو بالا"
+              aria-label="برو بالا"
+              style={{ pointerEvents: "auto" }}
+            >
+              <ArrowUp size={18} className="text-black dark:text-white" />
+              <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">برو بالا</span>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
