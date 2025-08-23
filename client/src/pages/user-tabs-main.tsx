@@ -966,13 +966,12 @@ export default function UserTabsMainPage() {
           >
             <Button
               onClick={scrollToTop}
-              className="flex items-center gap-2 bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white hover:bg-white/90 dark:hover:bg-black/90 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+              className="flex items-center justify-center bg-gradient-to-r from-telegram-blue to-telegram-blue-dark hover:from-telegram-blue-dark hover:to-telegram-blue text-white w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer border-0"
               title="برو بالا"
               aria-label="برو بالا"
               style={{ pointerEvents: "auto" }}
             >
-              <ArrowUp size={18} className="text-black dark:text-white" />
-              <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">برو بالا</span>
+              <ArrowUp size={20} className="text-white" />
             </Button>
           </div>
         )}
