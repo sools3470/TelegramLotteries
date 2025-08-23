@@ -411,15 +411,27 @@ export default function AdminPanelEnhanced() {
 
   // Scroll to top function - Same logic as user-tabs-main
   const scrollToTop = () => {
+    console.log('=== SCROLL TO TOP FUNCTION CALLED ===');
     try {
       // Find the main scrollable container - check multiple selectors
       const mainContainer = document.querySelector('.tab-content-enter') || 
                            document.querySelector('[data-radix-tabs-content]') ||
                            document.querySelector('.main-content') ||
                            document.querySelector('.app-container');
+      
+      console.log('Scroll to top - mainContainer found:', !!mainContainer);
+      
       if (mainContainer) {
+        console.log('Scroll to top - Before scrollTo, scrollTop:', mainContainer.scrollTop);
         mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        console.log('Scroll to top - After scrollTo called');
+        
+        // Check if it worked after a short delay
+        setTimeout(() => {
+          console.log('Scroll to top - After delay, scrollTop:', mainContainer.scrollTop);
+        }, 100);
       } else {
+        console.log('Scroll to top - No container found, using window scroll');
         // Fallback to window scroll
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -1034,6 +1046,10 @@ export default function AdminPanelEnhanced() {
               mainContainer.scrollTop = 100;
               console.log('Manually set scrollTop to 100');
             }
+            
+            // Test scrollToTop function
+            console.log('Testing scrollToTop function...');
+            scrollToTop();
             
             // Force re-render
             setShowScrollToTop(!showScrollToTop);
