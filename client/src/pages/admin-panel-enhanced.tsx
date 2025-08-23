@@ -430,7 +430,12 @@ export default function AdminPanelEnhanced() {
 
   // Scroll event handler - Same logic as user-tabs-main
   useEffect(() => {
+    console.log('Admin: useEffect for scroll listener triggered');
+    console.log('Admin: user?.userType:', user?.userType);
+    console.log('Admin: user?.adminLevel:', user?.adminLevel);
+    
     const handleScroll = () => {
+      console.log('Admin: handleScroll function called');
       // Check scroll on multiple containers
       const mainContainer = document.querySelector('.tab-content-enter') || 
                            document.querySelector('[data-radix-tabs-content]') ||
@@ -440,8 +445,10 @@ export default function AdminPanelEnhanced() {
       
       if (mainContainer) {
         scrollY = mainContainer.scrollTop;
+        console.log('Admin: Using mainContainer.scrollTop:', scrollY);
       } else {
         scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+        console.log('Admin: Using window/document scroll:', scrollY);
       }
       
       const scrollThreshold = 1;
@@ -1006,17 +1013,31 @@ export default function AdminPanelEnhanced() {
       <div className="fixed top-4 left-4 z-[9999]">
         <Button
           onClick={() => {
-            console.log('Test button clicked');
+            console.log('=== TEST BUTTON CLICKED ===');
+            console.log('Current showScrollToTop state:', showScrollToTop);
+            
             const mainContainer = document.querySelector('.tab-content-enter') || 
                                  document.querySelector('[data-radix-tabs-content]') ||
                                  document.querySelector('.main-content') ||
                                  document.querySelector('.app-container');
             console.log('Main container found:', !!mainContainer);
+            
             if (mainContainer) {
               console.log('Container scrollTop:', mainContainer.scrollTop);
               console.log('Container scrollHeight:', mainContainer.scrollHeight);
               console.log('Container clientHeight:', mainContainer.clientHeight);
+              console.log('Container can scroll:', mainContainer.scrollHeight > mainContainer.clientHeight);
             }
+            
+            // Test manual scroll
+            if (mainContainer) {
+              mainContainer.scrollTop = 100;
+              console.log('Manually set scrollTop to 100');
+            }
+            
+            // Force re-render
+            setShowScrollToTop(!showScrollToTop);
+            console.log('Toggled showScrollToTop to:', !showScrollToTop);
           }}
           className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
         >
