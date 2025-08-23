@@ -326,6 +326,23 @@ export default function AdminPanel() {
 
   return (
     <div className="app-container bg-telegram-bg">
+      {/* Debug Panel - Outside main content */}
+      <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
+        <div>showScrollToTop: {showScrollToTop.toString()}</div>
+        <div>userType: admin</div>
+        <div>adminLevel: {user?.adminLevel}</div>
+      </div>
+
+      {/* Test Button - Always visible */}
+      <div className="fixed top-4 left-4 z-[9999]">
+        <Button
+          onClick={() => setShowScrollToTop(!showScrollToTop)}
+          className="bg-red-500 hover:bg-red-600 text-white"
+        >
+          Toggle Scroll Button
+        </Button>
+      </div>
+
       <div className="main-content p-4 pb-20">
         {/* Header */}
         <div className="mb-6">
@@ -671,7 +688,7 @@ export default function AdminPanel() {
         )}
       </div>
 
-      {/* Scroll to Top Button - for admin */}
+      {/* Scroll to Top Button - for admin - Outside main content */}
       {showScrollToTop && (
         <div 
           className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]"
@@ -689,13 +706,6 @@ export default function AdminPanel() {
           </Button>
         </div>
       )}
-
-      {/* Debug Panel */}
-      <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
-        <div>showScrollToTop: {showScrollToTop.toString()}</div>
-        <div>userType: admin</div>
-        <div>adminLevel: {user?.adminLevel}</div>
-      </div>
 
       {/* Bottom Navigation */}
       <AdminBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
