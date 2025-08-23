@@ -405,6 +405,8 @@ export default function AdminPanelEnhanced() {
   const [deleteRaffleId, setDeleteRaffleId] = useState<string>("");
   const [bulkDeleteStatus, setBulkDeleteStatus] = useState<string>("");
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [selectedRaffle, setSelectedRaffle] = useState<any>(null);
+  const [selectedAction, setSelectedAction] = useState<'approve' | 'reject' | null>(null);
 
 
 
