@@ -987,18 +987,7 @@ export default function UserTabsMainPage() {
           </div>
         )}
 
-        {/* Test Button - Always visible for debugging */}
-        <div className="fixed top-4 left-4 z-[9999]">
-          <Button
-            onClick={() => {
-              setShowScrollToTop(!showScrollToTop);
-              setShowSupportButton(!showSupportButton);
-            }}
-            className="bg-red-500 hover:bg-red-600 text-white text-xs"
-          >
-            Toggle Buttons
-          </Button>
-        </div>
+
     </div>
   );
 }
