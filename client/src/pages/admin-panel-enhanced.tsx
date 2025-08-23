@@ -409,9 +409,9 @@ export default function AdminPanelEnhanced() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // Scroll to top function - Same logic as user-tabs-main
+  // Scroll to top function - Same logic as user-tabs-main - UPDATED
   const scrollToTop = () => {
-    console.log('=== SCROLL TO TOP FUNCTION CALLED ===');
+    console.log('=== SCROLL TO TOP FUNCTION CALLED - UPDATED ===');
     try {
       // Find the main scrollable container - check multiple selectors
       const mainContainer = document.querySelector('.tab-content-enter') || 
@@ -1025,7 +1025,7 @@ export default function AdminPanelEnhanced() {
       <div className="fixed top-4 left-4 z-[9999]">
         <Button
           onClick={() => {
-            console.log('=== TEST BUTTON CLICKED ===');
+            console.log('=== TEST BUTTON CLICKED - UPDATED ===');
             console.log('Current showScrollToTop state:', showScrollToTop);
             
             const mainContainer = document.querySelector('.tab-content-enter') || 
