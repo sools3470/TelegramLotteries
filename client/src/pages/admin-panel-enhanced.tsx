@@ -1089,7 +1089,7 @@ export default function AdminPanelEnhanced() {
         </Button>
       </div>
 
-      <div className="main-content p-4">
+      <div className="main-content p-4 overflow-y-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={`grid w-full mb-6 ${
             isKing ? 'grid-cols-4' : 
