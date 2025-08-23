@@ -76,8 +76,11 @@ export default function UserTabsMainPage() {
   // Scroll to top function
   const scrollToTop = () => {
     try {
-      // Find the main scrollable container
-      const mainContainer = document.querySelector('.tab-content-enter');
+      // Find the main scrollable container - check multiple selectors for admin users
+      const mainContainer = document.querySelector('.tab-content-enter') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.main-content') ||
+                           document.querySelector('.app-container');
       if (mainContainer) {
         mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -92,8 +95,11 @@ export default function UserTabsMainPage() {
   // Scroll event handler
   useEffect(() => {
     const handleScroll = () => {
-      // Check scroll on the main container
-      const mainContainer = document.querySelector('.tab-content-enter');
+      // Check scroll on multiple containers for admin users
+      const mainContainer = document.querySelector('.tab-content-enter') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.main-content') ||
+                           document.querySelector('.app-container');
       let scrollY = 0;
       
       if (mainContainer) {
@@ -103,22 +109,37 @@ export default function UserTabsMainPage() {
       }
       
       const scrollThreshold = 1;
+      const shouldShow = scrollY > scrollThreshold;
       
-      setShowSupportButton(scrollY > scrollThreshold);
-      setShowScrollToTop(scrollY > scrollThreshold);
+      console.log('User scroll debug:', {
+        userType: user?.userType,
+        adminLevel: user?.adminLevel,
+        mainContainer: !!mainContainer,
+        scrollY,
+        scrollThreshold,
+        shouldShow,
+        currentShowState: showScrollToTop
+      });
+      
+      setShowScrollToTop(shouldShow);
     };
 
-    // Add scroll listener to the main container
-    const mainContainer = document.querySelector('.tab-content-enter');
+    // Add scroll listener to multiple containers
+    const mainContainer = document.querySelector('.tab-content-enter') || 
+                         document.querySelector('[data-radix-tabs-content]') ||
+                         document.querySelector('.main-content') ||
+                         document.querySelector('.app-container');
     if (mainContainer) {
       mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('User: Added scroll listener to main container');
       return () => mainContainer.removeEventListener('scroll', handleScroll);
     } else {
       // Fallback to document scroll
       document.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('User: Added scroll listener to document');
       return () => document.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [user?.userType, user?.adminLevel, showScrollToTop]);
 
   const form = useForm<RaffleFormData>({
     resolver: zodResolver(raffleFormSchema),
@@ -952,6 +973,16 @@ export default function UserTabsMainPage() {
               <ArrowUp size={18} className="text-black dark:text-white" />
               <span className="text-sm font-medium whitespace-nowrap text-black dark:text-white">برو بالا</span>
             </Button>
+          </div>
+        )}
+
+        {/* Debug Panel - for admin users */}
+        {user?.userType === "bot_admin" && (
+          <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
+            <div>showScrollToTop: {showScrollToTop.toString()}</div>
+            <div>userType: {user?.userType}</div>
+            <div>adminLevel: {user?.adminLevel}</div>
+            <div>activeTab: {activeTab}</div>
           </div>
         )}
     </div>
