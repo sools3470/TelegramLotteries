@@ -137,8 +137,17 @@ export default function AdminPanel() {
       }
       
       const scrollThreshold = 1;
+      const shouldShow = scrollY > scrollThreshold;
       
-      setShowScrollToTop(scrollY > scrollThreshold);
+      console.log('Admin scroll debug:', {
+        tabContent: !!tabContent,
+        scrollY,
+        scrollThreshold,
+        shouldShow,
+        currentShowState: showScrollToTop
+      });
+      
+      setShowScrollToTop(shouldShow);
     };
 
     // Add scroll listener to tab content containers
@@ -148,13 +157,15 @@ export default function AdminPanel() {
                       document.querySelector('.app-container');
     if (tabContent) {
       tabContent.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('Admin: Added scroll listener to tab content');
       return () => tabContent.removeEventListener('scroll', handleScroll);
     } else {
       // Fallback to document scroll
       document.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('Admin: Added scroll listener to document');
       return () => document.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [showScrollToTop]);
 
   // Queries
   const { data: pendingRaffles = [], isLoading: pendingLoading } = useQuery({
@@ -678,6 +689,13 @@ export default function AdminPanel() {
           </Button>
         </div>
       )}
+
+      {/* Debug Panel */}
+      <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
+        <div>showScrollToTop: {showScrollToTop.toString()}</div>
+        <div>userType: admin</div>
+        <div>adminLevel: {user?.adminLevel}</div>
+      </div>
 
       {/* Bottom Navigation */}
       <AdminBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
