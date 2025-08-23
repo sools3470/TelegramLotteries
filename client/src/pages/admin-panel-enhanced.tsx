@@ -409,15 +409,16 @@ export default function AdminPanelEnhanced() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // Scroll to top function
+  // Scroll to top function - Same logic as user-tabs-main
   const scrollToTop = () => {
     try {
-      // Find the main scrollable container for admin panel
-      const tabContent = document.querySelector('[data-radix-tabs-content]') || 
-                        document.querySelector('.main-content') ||
-                        document.querySelector('.app-container');
-      if (tabContent) {
-        tabContent.scrollTo({ top: 0, behavior: 'smooth' });
+      // Find the main scrollable container - check multiple selectors
+      const mainContainer = document.querySelector('.tab-content-enter') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.main-content') ||
+                           document.querySelector('.app-container');
+      if (mainContainer) {
+        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         // Fallback to window scroll
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -427,17 +428,18 @@ export default function AdminPanelEnhanced() {
     }
   };
 
-  // Scroll event handler
+  // Scroll event handler - Same logic as user-tabs-main
   useEffect(() => {
     const handleScroll = () => {
-      // Check scroll on tab content containers for admin panel
-      const tabContent = document.querySelector('[data-radix-tabs-content]') || 
-                        document.querySelector('.main-content') ||
-                        document.querySelector('.app-container');
+      // Check scroll on multiple containers
+      const mainContainer = document.querySelector('.tab-content-enter') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.main-content') ||
+                           document.querySelector('.app-container');
       let scrollY = 0;
       
-      if (tabContent) {
-        scrollY = tabContent.scrollTop;
+      if (mainContainer) {
+        scrollY = mainContainer.scrollTop;
       } else {
         scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
       }
@@ -446,7 +448,9 @@ export default function AdminPanelEnhanced() {
       const shouldShow = scrollY > scrollThreshold;
       
       console.log('Admin scroll debug:', {
-        tabContent: !!tabContent,
+        userType: user?.userType,
+        adminLevel: user?.adminLevel,
+        mainContainer: !!mainContainer,
         scrollY,
         scrollThreshold,
         shouldShow,
@@ -456,21 +460,22 @@ export default function AdminPanelEnhanced() {
       setShowScrollToTop(shouldShow);
     };
 
-    // Add scroll listener to tab content containers
-    const tabContent = document.querySelector('[data-radix-tabs-content]') || 
-                      document.querySelector('.main-content') ||
-                      document.querySelector('.app-container');
-    if (tabContent) {
-      tabContent.addEventListener('scroll', handleScroll, { passive: true });
-      console.log('Admin: Added scroll listener to tab content');
-      return () => tabContent.removeEventListener('scroll', handleScroll);
+    // Add scroll listener to multiple containers
+    const mainContainer = document.querySelector('.tab-content-enter') || 
+                         document.querySelector('[data-radix-tabs-content]') ||
+                         document.querySelector('.main-content') ||
+                         document.querySelector('.app-container');
+    if (mainContainer) {
+      mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('Admin: Added scroll listener to main container');
+      return () => mainContainer.removeEventListener('scroll', handleScroll);
     } else {
       // Fallback to document scroll
       document.addEventListener('scroll', handleScroll, { passive: true });
       console.log('Admin: Added scroll listener to document');
       return () => document.removeEventListener('scroll', handleScroll);
     }
-  }, [showScrollToTop]);
+  }, [user?.userType, user?.adminLevel, showScrollToTop]);
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
@@ -994,15 +999,7 @@ export default function AdminPanelEnhanced() {
         <div>activeTab: {activeTab}</div>
       </div>
 
-      {/* Test Button - Always visible */}
-      <div className="fixed top-4 left-4 z-[9999]">
-        <Button
-          onClick={() => setShowScrollToTop(!showScrollToTop)}
-          className="bg-red-500 hover:bg-red-600 text-white text-xs"
-        >
-          Toggle Scroll Button
-        </Button>
-      </div>
+      
 
       <div className="main-content p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
