@@ -236,7 +236,8 @@ function RafflesList({
   onBulkDelete,
   adminLevel,
   setSelectedRaffle,
-  setShowReviewDialog
+  setShowReviewDialog,
+  setEditedMessageLink
 }: { 
   status: string,
   onApprove?: (raffle: any) => void,
@@ -245,7 +246,8 @@ function RafflesList({
   onBulkDelete?: () => void,
   adminLevel?: number | null,
   setSelectedRaffle?: (raffle: any) => void,
-  setShowReviewDialog?: (show: boolean) => void
+  setShowReviewDialog?: (show: boolean) => void,
+  setEditedMessageLink?: (link: string) => void
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -1001,6 +1003,7 @@ export default function AdminPanelEnhanced() {
                   adminLevel={adminLevel}
                   setSelectedRaffle={setSelectedRaffle}
                   setShowReviewDialog={setShowReviewDialog}
+                  setEditedMessageLink={setEditedMessageLink}
                 />
               </CardContent>
             </Card>
