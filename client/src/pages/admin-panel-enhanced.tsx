@@ -1200,8 +1200,13 @@ export default function AdminPanelEnhanced() {
         {debugInfo && <div className="mt-2 p-2 bg-red-900 rounded">Debug: {debugInfo}</div>}
       </div>
 
+      {/* Simple Test Button */}
+      <div className="fixed top-4 left-4 z-[9999] bg-red-500 text-white p-2 rounded">
+        TEST BUTTON - CAN YOU SEE THIS?
+      </div>
+      
       {/* Test Buttons - Updated */}
-      <div className="fixed top-4 left-4 z-[9999] flex flex-col gap-2">
+      <div className="fixed top-20 left-4 z-[9999] flex flex-col gap-2">
         <Button
           onClick={() => {
             // Find the best scrollable container

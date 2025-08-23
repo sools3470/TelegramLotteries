@@ -1,1 +1,4 @@
 ADMIN_TELEGRAM_IDS=128787773,7159783954
+DATABASE_URL=postgresql://postgres:password@localhost:5432/raffle_db
+SESSION_SECRET=your-very-secure-random-string-minimum-32-characters
+NODE_ENV=development
