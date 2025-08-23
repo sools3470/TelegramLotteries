@@ -408,6 +408,7 @@ export default function AdminPanelEnhanced() {
   const [bulkDeleteStatus, setBulkDeleteStatus] = useState<string>("");
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   // Scroll to top function - Same logic as user-tabs-main - UPDATED
   const scrollToTop = () => {
@@ -1019,41 +1020,53 @@ export default function AdminPanelEnhanced() {
         <div>tabContent: {document.querySelector('[data-radix-tabs-content]') ? 'Found' : 'Not Found'}</div>
         <div>mainContent: {document.querySelector('.main-content') ? 'Found' : 'Not Found'}</div>
         <div>appContainer: {document.querySelector('.app-container') ? 'Found' : 'Not Found'}</div>
+        <div>scrollY: {(() => {
+          const mainContainer = document.querySelector('.tab-content-enter') || 
+                               document.querySelector('[data-radix-tabs-content]') ||
+                               document.querySelector('.main-content') ||
+                               document.querySelector('.app-container');
+          return mainContainer ? mainContainer.scrollTop : (window.scrollY || 0);
+        })()}</div>
+        <div>containerHeight: {(() => {
+          const mainContainer = document.querySelector('.tab-content-enter') || 
+                               document.querySelector('[data-radix-tabs-content]') ||
+                               document.querySelector('.main-content') ||
+                               document.querySelector('.app-container');
+          return mainContainer ? `${mainContainer.scrollHeight}/${mainContainer.clientHeight}` : 'N/A';
+        })()}</div>
+        {debugInfo && <div className="mt-2 p-2 bg-red-900 rounded">Debug: {debugInfo}</div>}
       </div>
 
       {/* Test Button - Temporary */}
       <div className="fixed top-4 left-4 z-[9999]">
         <Button
           onClick={() => {
-            console.log('=== TEST BUTTON CLICKED - UPDATED ===');
-            console.log('Current showScrollToTop state:', showScrollToTop);
-            
             const mainContainer = document.querySelector('.tab-content-enter') || 
                                  document.querySelector('[data-radix-tabs-content]') ||
                                  document.querySelector('.main-content') ||
                                  document.querySelector('.app-container');
-            console.log('Main container found:', !!mainContainer);
+            
+            let debugMsg = `Container: ${mainContainer ? 'Found' : 'Not Found'}`;
             
             if (mainContainer) {
-              console.log('Container scrollTop:', mainContainer.scrollTop);
-              console.log('Container scrollHeight:', mainContainer.scrollHeight);
-              console.log('Container clientHeight:', mainContainer.clientHeight);
-              console.log('Container can scroll:', mainContainer.scrollHeight > mainContainer.clientHeight);
-            }
-            
-            // Test manual scroll
-            if (mainContainer) {
+              debugMsg += ` | ScrollTop: ${mainContainer.scrollTop}`;
+              debugMsg += ` | Height: ${mainContainer.scrollHeight}/${mainContainer.clientHeight}`;
+              debugMsg += ` | CanScroll: ${mainContainer.scrollHeight > mainContainer.clientHeight}`;
+              
+              // Test manual scroll
               mainContainer.scrollTop = 100;
-              console.log('Manually set scrollTop to 100');
+              debugMsg += ` | Set scrollTop to 100`;
             }
             
             // Test scrollToTop function
-            console.log('Testing scrollToTop function...');
             scrollToTop();
+            debugMsg += ` | Called scrollToTop`;
             
             // Force re-render
             setShowScrollToTop(!showScrollToTop);
-            console.log('Toggled showScrollToTop to:', !showScrollToTop);
+            debugMsg += ` | Toggled button`;
+            
+            setDebugInfo(debugMsg);
           }}
           className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
         >
