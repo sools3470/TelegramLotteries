@@ -410,22 +410,51 @@ export default function AdminPanelEnhanced() {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>('');
 
-  // Scroll to top function - Same logic as user-tabs-main - UPDATED
+  // Scroll to top function - Enhanced with better container detection
   const scrollToTop = () => {
-    console.log('=== SCROLL TO TOP FUNCTION CALLED - UPDATED ===');
+    console.log('=== SCROLL TO TOP FUNCTION CALLED - ENHANCED ===');
     try {
-      // Find the main scrollable container - check multiple selectors
-      const mainContainer = document.querySelector('.tab-content-enter') || 
-                           document.querySelector('[data-radix-tabs-content]') ||
-                           document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                           document.querySelector('[data-state="active"]') ||
-                           document.querySelector('.main-content') ||
-                           document.querySelector('.app-container');
+      // Find the main scrollable container - check multiple selectors with better priority
+      let mainContainer = null;
+      
+      // First try to find the active tab content
+      const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+      if (activeTabContent && activeTabContent.scrollHeight > activeTabContent.clientHeight) {
+        mainContainer = activeTabContent;
+        console.log('Scroll to top - Using active tab content');
+      }
+      
+      // If not found or not scrollable, try other selectors
+      if (!mainContainer) {
+        const selectors = [
+          '.tab-content-enter',
+          '[data-radix-tabs-content]',
+          '[data-state="active"]',
+          '.main-content',
+          '.app-container'
+        ];
+        
+        for (const selector of selectors) {
+          const element = document.querySelector(selector);
+          if (element && element.scrollHeight > element.clientHeight) {
+            mainContainer = element;
+            console.log('Scroll to top - Using selector:', selector);
+            break;
+          }
+        }
+      }
       
       console.log('Scroll to top - mainContainer found:', !!mainContainer);
       
       if (mainContainer) {
         console.log('Scroll to top - Before scrollTo, scrollTop:', mainContainer.scrollTop);
+        console.log('Scroll to top - Container dimensions:', {
+          scrollHeight: mainContainer.scrollHeight,
+          clientHeight: mainContainer.clientHeight,
+          scrollTop: mainContainer.scrollTop
+        });
+        
+        // Use scrollTo with smooth behavior
         mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
         console.log('Scroll to top - After scrollTo called');
         
@@ -434,16 +463,18 @@ export default function AdminPanelEnhanced() {
           console.log('Scroll to top - After delay, scrollTop:', mainContainer.scrollTop);
         }, 100);
       } else {
-        console.log('Scroll to top - No container found, using window scroll');
+        console.log('Scroll to top - No scrollable container found, using window scroll');
         // Fallback to window scroll
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (error) {
       console.error('Scroll to top error:', error);
+      // Fallback to window scroll on error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // Scroll event handler - Same logic as user-tabs-main
+  // Scroll event handler - Enhanced with better container detection
   useEffect(() => {
     console.log('Admin: useEffect for scroll listener triggered');
     console.log('Admin: user?.userType:', user?.userType);
@@ -451,19 +482,42 @@ export default function AdminPanelEnhanced() {
     
     const handleScroll = () => {
       console.log('Admin: handleScroll function called');
-      // Check scroll on multiple containers
-      const mainContainer = document.querySelector('.tab-content-enter') || 
-                           document.querySelector('[data-radix-tabs-content]') ||
-                           document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                           document.querySelector('[data-state="active"]') ||
-                           document.querySelector('.main-content') ||
-                           document.querySelector('.app-container');
+      
+      // Find the best scrollable container
+      let mainContainer = null;
       let scrollY = 0;
       
-      if (mainContainer) {
+      // First try to find the active tab content
+      const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+      if (activeTabContent && activeTabContent.scrollHeight > activeTabContent.clientHeight) {
+        mainContainer = activeTabContent;
         scrollY = mainContainer.scrollTop;
-        console.log('Admin: Using mainContainer.scrollTop:', scrollY);
-      } else {
+        console.log('Admin: Using active tab content scrollTop:', scrollY);
+      }
+      
+      // If not found or not scrollable, try other selectors
+      if (!mainContainer) {
+        const selectors = [
+          '.tab-content-enter',
+          '[data-radix-tabs-content]',
+          '[data-state="active"]',
+          '.main-content',
+          '.app-container'
+        ];
+        
+        for (const selector of selectors) {
+          const element = document.querySelector(selector);
+          if (element && element.scrollHeight > element.clientHeight) {
+            mainContainer = element;
+            scrollY = mainContainer.scrollTop;
+            console.log('Admin: Using selector scrollTop:', selector, scrollY);
+            break;
+          }
+        }
+      }
+      
+      // Fallback to window scroll if no scrollable container found
+      if (!mainContainer) {
         scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
         console.log('Admin: Using window/document scroll:', scrollY);
       }
@@ -484,13 +538,34 @@ export default function AdminPanelEnhanced() {
       setShowScrollToTop(shouldShow);
     };
 
-    // Add scroll listener to multiple containers
-    const mainContainer = document.querySelector('.tab-content-enter') || 
-                         document.querySelector('[data-radix-tabs-content]') ||
-                         document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                         document.querySelector('[data-state="active"]') ||
-                         document.querySelector('.main-content') ||
-                         document.querySelector('.app-container');
+    // Add scroll listener to the best available container
+    let mainContainer = null;
+    
+    // First try to find the active tab content
+    const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+    if (activeTabContent && activeTabContent.scrollHeight > activeTabContent.clientHeight) {
+      mainContainer = activeTabContent;
+    }
+    
+    // If not found or not scrollable, try other selectors
+    if (!mainContainer) {
+      const selectors = [
+        '.tab-content-enter',
+        '[data-radix-tabs-content]',
+        '[data-state="active"]',
+        '.main-content',
+        '.app-container'
+      ];
+      
+      for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element && element.scrollHeight > element.clientHeight) {
+          mainContainer = element;
+          break;
+        }
+      }
+    }
+    
     if (mainContainer) {
       mainContainer.addEventListener('scroll', handleScroll, { passive: true });
       console.log('Admin: Added scroll listener to main container');
@@ -501,7 +576,7 @@ export default function AdminPanelEnhanced() {
       console.log('Admin: Added scroll listener to document');
       return () => document.removeEventListener('scroll', handleScroll);
     }
-  }, [user?.userType, user?.adminLevel, showScrollToTop]);
+  }, [user?.userType, user?.adminLevel, showScrollToTop, activeTab]);
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
@@ -1030,22 +1105,97 @@ export default function AdminPanelEnhanced() {
         <div>mainContent: {document.querySelector('.main-content') ? 'Found' : 'Not Found'}</div>
         <div>appContainer: {document.querySelector('.app-container') ? 'Found' : 'Not Found'}</div>
         <div>scrollY: {(() => {
-          const mainContainer = document.querySelector('.tab-content-enter') || 
-                               document.querySelector('[data-radix-tabs-content]') ||
-                               document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                               document.querySelector('[data-state="active"]') ||
-                               document.querySelector('.main-content') ||
-                               document.querySelector('.app-container');
+          // Find the best scrollable container
+          let mainContainer = null;
+          
+          // First try to find the active tab content
+          const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+          if (activeTabContent && activeTabContent.scrollHeight > activeTabContent.clientHeight) {
+            mainContainer = activeTabContent;
+          }
+          
+          // If not found or not scrollable, try other selectors
+          if (!mainContainer) {
+            const selectors = [
+              '.tab-content-enter',
+              '[data-radix-tabs-content]',
+              '[data-state="active"]',
+              '.main-content',
+              '.app-container'
+            ];
+            
+            for (const selector of selectors) {
+              const element = document.querySelector(selector);
+              if (element && element.scrollHeight > element.clientHeight) {
+                mainContainer = element;
+                break;
+              }
+            }
+          }
+          
           return mainContainer ? mainContainer.scrollTop : (window.scrollY || 0);
         })()}</div>
         <div>containerHeight: {(() => {
-          const mainContainer = document.querySelector('.tab-content-enter') || 
-                               document.querySelector('[data-radix-tabs-content]') ||
-                               document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                               document.querySelector('[data-state="active"]') ||
-                               document.querySelector('.main-content') ||
-                               document.querySelector('.app-container');
+          // Find the best scrollable container
+          let mainContainer = null;
+          
+          // First try to find the active tab content
+          const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+          if (activeTabContent && activeTabContent.scrollHeight > activeTabContent.clientHeight) {
+            mainContainer = activeTabContent;
+          }
+          
+          // If not found or not scrollable, try other selectors
+          if (!mainContainer) {
+            const selectors = [
+              '.tab-content-enter',
+              '[data-radix-tabs-content]',
+              '[data-state="active"]',
+              '.main-content',
+              '.app-container'
+            ];
+            
+            for (const selector of selectors) {
+              const element = document.querySelector(selector);
+              if (element && element.scrollHeight > element.clientHeight) {
+                mainContainer = element;
+                break;
+              }
+            }
+          }
+          
           return mainContainer ? `${mainContainer.scrollHeight}/${mainContainer.clientHeight}` : 'N/A';
+        })()}</div>
+        <div>canScroll: {(() => {
+          // Find the best scrollable container
+          let mainContainer = null;
+          
+          // First try to find the active tab content
+          const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+          if (activeTabContent && activeTabContent.scrollHeight > activeTabContent.clientHeight) {
+            mainContainer = activeTabContent;
+          }
+          
+          // If not found or not scrollable, try other selectors
+          if (!mainContainer) {
+            const selectors = [
+              '.tab-content-enter',
+              '[data-radix-tabs-content]',
+              '[data-state="active"]',
+              '.main-content',
+              '.app-container'
+            ];
+            
+            for (const selector of selectors) {
+              const element = document.querySelector(selector);
+              if (element && element.scrollHeight > element.clientHeight) {
+                mainContainer = element;
+                break;
+              }
+            }
+          }
+          
+          return mainContainer ? (mainContainer.scrollHeight > mainContainer.clientHeight).toString() : 'false';
         })()}</div>
         {debugInfo && <div className="mt-2 p-2 bg-red-900 rounded">Debug: {debugInfo}</div>}
       </div>
@@ -1054,12 +1204,33 @@ export default function AdminPanelEnhanced() {
       <div className="fixed top-4 left-4 z-[9999]">
         <Button
           onClick={() => {
-            const mainContainer = document.querySelector('.tab-content-enter') || 
-                                 document.querySelector('[data-radix-tabs-content]') ||
-                                 document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
-                                 document.querySelector('[data-state="active"]') ||
-                                 document.querySelector('.main-content') ||
-                                 document.querySelector('.app-container');
+            // Find the best scrollable container
+            let mainContainer = null;
+            
+            // First try to find the active tab content
+            const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+            if (activeTabContent && activeTabContent.scrollHeight > activeTabContent.clientHeight) {
+              mainContainer = activeTabContent;
+            }
+            
+            // If not found or not scrollable, try other selectors
+            if (!mainContainer) {
+              const selectors = [
+                '.tab-content-enter',
+                '[data-radix-tabs-content]',
+                '[data-state="active"]',
+                '.main-content',
+                '.app-container'
+              ];
+              
+              for (const selector of selectors) {
+                const element = document.querySelector(selector);
+                if (element && element.scrollHeight > element.clientHeight) {
+                  mainContainer = element;
+                  break;
+                }
+              }
+            }
             
             let debugMsg = `Container: ${mainContainer ? 'Found' : 'Not Found'}`;
             
@@ -1086,6 +1257,52 @@ export default function AdminPanelEnhanced() {
           className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
         >
           Test Scroll
+        </Button>
+        
+        {/* Add test content button to make container scrollable */}
+        <Button
+          onClick={() => {
+            const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+            if (activeTabContent) {
+              // Add some test content to make it scrollable
+              const testDiv = document.createElement('div');
+              testDiv.innerHTML = `
+                <div style="height: 2000px; background: linear-gradient(to bottom, #f0f0f0, #e0e0e0); padding: 20px;">
+                  <h3>Test Content for Scrolling</h3>
+                  <p>This content was added to test the scroll functionality.</p>
+                  <p>Scroll down to see the scroll-to-top button appear.</p>
+                  ${Array(50).fill('<p>Test paragraph for scrolling...</p>').join('')}
+                </div>
+              `;
+              activeTabContent.appendChild(testDiv);
+              
+              setDebugInfo('Added test content to make container scrollable');
+            } else {
+              setDebugInfo('Could not find active tab content to add test content');
+            }
+          }}
+          className="bg-green-500 hover:bg-green-600 text-white text-xs ml-2"
+        >
+          Add Test Content
+        </Button>
+        
+        {/* Clear test content button */}
+        <Button
+          onClick={() => {
+            const activeTabContent = document.querySelector(`[data-state="active"][data-value="${activeTab}"]`);
+            if (activeTabContent) {
+              // Remove test content
+              const testDivs = activeTabContent.querySelectorAll('div[style*="height: 2000px"]');
+              testDivs.forEach(div => div.remove());
+              
+              setDebugInfo('Cleared test content');
+            } else {
+              setDebugInfo('Could not find active tab content to clear test content');
+            }
+          }}
+          className="bg-red-500 hover:bg-red-600 text-white text-xs ml-2"
+        >
+          Clear Test Content
         </Button>
       </div>
 
