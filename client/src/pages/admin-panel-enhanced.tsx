@@ -402,6 +402,10 @@ export default function AdminPanelEnhanced() {
   const [restrictionEnd, setRestrictionEnd] = useState("");
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [deleteRaffleId, setDeleteRaffleId] = useState<string>("");
+  const [bulkDeleteStatus, setBulkDeleteStatus] = useState<string>("");
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
@@ -857,15 +861,15 @@ export default function AdminPanelEnhanced() {
   };
 
   const handleDeleteRaffle = (raffleId: string) => {
-    setSelectedRaffle(null);
+    setDeleteRaffleId(raffleId);
     setIsDeleteDialogOpen(true);
   };
 
   const confirmDeleteRaffle = () => {
-    if (selectedRaffle) {
-      deleteRaffleMutation.mutate(selectedRaffle.id);
+    if (deleteRaffleId) {
+      deleteRaffleMutation.mutate(deleteRaffleId);
       setIsDeleteDialogOpen(false);
-      setSelectedRaffle(null);
+      setDeleteRaffleId("");
     }
   };
 
