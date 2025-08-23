@@ -417,6 +417,7 @@ export default function AdminPanelEnhanced() {
       // Find the main scrollable container - check multiple selectors
       const mainContainer = document.querySelector('.tab-content-enter') || 
                            document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
                            document.querySelector('[data-state="active"]') ||
                            document.querySelector('.main-content') ||
                            document.querySelector('.app-container');
@@ -453,6 +454,7 @@ export default function AdminPanelEnhanced() {
       // Check scroll on multiple containers
       const mainContainer = document.querySelector('.tab-content-enter') || 
                            document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
                            document.querySelector('[data-state="active"]') ||
                            document.querySelector('.main-content') ||
                            document.querySelector('.app-container');
@@ -485,6 +487,7 @@ export default function AdminPanelEnhanced() {
     // Add scroll listener to multiple containers
     const mainContainer = document.querySelector('.tab-content-enter') || 
                          document.querySelector('[data-radix-tabs-content]') ||
+                         document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
                          document.querySelector('[data-state="active"]') ||
                          document.querySelector('.main-content') ||
                          document.querySelector('.app-container');
@@ -1022,11 +1025,14 @@ export default function AdminPanelEnhanced() {
         <div>activeTab: {activeTab}</div>
         <div>tabContent: {document.querySelector('[data-radix-tabs-content]') ? 'Found' : 'Not Found'}</div>
         <div>tabsContent: {document.querySelector('[data-state="active"]') ? 'Found' : 'Not Found'}</div>
+        <div>activeTabContent: {document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ? 'Found' : 'Not Found'}</div>
+        <div>rafflesContent: {document.querySelector('[data-value="raffles"]') ? 'Found' : 'Not Found'}</div>
         <div>mainContent: {document.querySelector('.main-content') ? 'Found' : 'Not Found'}</div>
         <div>appContainer: {document.querySelector('.app-container') ? 'Found' : 'Not Found'}</div>
         <div>scrollY: {(() => {
           const mainContainer = document.querySelector('.tab-content-enter') || 
                                document.querySelector('[data-radix-tabs-content]') ||
+                               document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
                                document.querySelector('[data-state="active"]') ||
                                document.querySelector('.main-content') ||
                                document.querySelector('.app-container');
@@ -1035,6 +1041,7 @@ export default function AdminPanelEnhanced() {
         <div>containerHeight: {(() => {
           const mainContainer = document.querySelector('.tab-content-enter') || 
                                document.querySelector('[data-radix-tabs-content]') ||
+                               document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
                                document.querySelector('[data-state="active"]') ||
                                document.querySelector('.main-content') ||
                                document.querySelector('.app-container');
@@ -1049,6 +1056,7 @@ export default function AdminPanelEnhanced() {
           onClick={() => {
             const mainContainer = document.querySelector('.tab-content-enter') || 
                                  document.querySelector('[data-radix-tabs-content]') ||
+                                 document.querySelector(`[data-state="active"][data-value="${activeTab}"]`) ||
                                  document.querySelector('[data-state="active"]') ||
                                  document.querySelector('.main-content') ||
                                  document.querySelector('.app-container');
