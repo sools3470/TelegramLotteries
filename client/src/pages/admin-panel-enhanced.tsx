@@ -1200,8 +1200,8 @@ export default function AdminPanelEnhanced() {
         {debugInfo && <div className="mt-2 p-2 bg-red-900 rounded">Debug: {debugInfo}</div>}
       </div>
 
-      {/* Test Button - Temporary */}
-      <div className="fixed top-4 left-4 z-[9999]">
+      {/* Test Buttons - Updated */}
+      <div className="fixed top-4 left-4 z-[9999] flex flex-col gap-2">
         <Button
           onClick={() => {
             // Find the best scrollable container
@@ -1256,7 +1256,7 @@ export default function AdminPanelEnhanced() {
           }}
           className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
         >
-          Test Scroll
+          Test Scroll (Updated)
         </Button>
         
         {/* Add test content button to make container scrollable */}
@@ -1281,9 +1281,9 @@ export default function AdminPanelEnhanced() {
               setDebugInfo('Could not find active tab content to add test content');
             }
           }}
-          className="bg-green-500 hover:bg-green-600 text-white text-xs ml-2"
+          className="bg-green-500 hover:bg-green-600 text-white text-xs"
         >
-          Add Test Content
+          Add Test Content (New)
         </Button>
         
         {/* Clear test content button */}
@@ -1300,9 +1300,9 @@ export default function AdminPanelEnhanced() {
               setDebugInfo('Could not find active tab content to clear test content');
             }
           }}
-          className="bg-red-500 hover:bg-red-600 text-white text-xs ml-2"
+          className="bg-red-500 hover:bg-red-600 text-white text-xs"
         >
-          Clear Test Content
+          Clear Test Content (New)
         </Button>
         
         {/* Test scroll container info */}
@@ -1328,9 +1328,9 @@ export default function AdminPanelEnhanced() {
             
             setDebugInfo(debugMsg);
           }}
-          className="bg-purple-500 hover:bg-purple-600 text-white text-xs ml-2"
+          className="bg-purple-500 hover:bg-purple-600 text-white text-xs"
         >
-          Container Info
+          Container Info (New)
         </Button>
       </div>
 
