@@ -358,6 +358,7 @@ function RafflesList({
                         className="bg-blue-500 hover:bg-blue-600 text-white"
                         onClick={() => {
                           setSelectedRaffle?.(raffle);
+                          setEditedMessageLink(raffle.messageLink || "");
                           setShowReviewDialog?.(true);
                         }}
                       >
@@ -406,6 +407,7 @@ export default function AdminPanelEnhanced() {
   const [bulkDeleteStatus, setBulkDeleteStatus] = useState<string>("");
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'approve' | 'reject' | null>(null);
+  const [editedMessageLink, setEditedMessageLink] = useState<string>("");
 
 
 
@@ -792,7 +794,8 @@ export default function AdminPanelEnhanced() {
     approveRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
       level: data.level,
-      reason: data.reason
+      reason: data.reason,
+      messageLink: editedMessageLink || selectedRaffle.messageLink
     });
   };
 
@@ -800,6 +803,7 @@ export default function AdminPanelEnhanced() {
     if (!selectedRaffle) return;
     rejectRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
+      messageLink: editedMessageLink || selectedRaffle.messageLink,
       ...data
     });
   };
@@ -1493,7 +1497,6 @@ export default function AdminPanelEnhanced() {
               <DialogDescription>
                 <div className="space-y-1">
                   <div>درخواست شماره: {selectedRaffle?.requestNumber}</div>
-                  <div>ارسال‌کننده: {selectedRaffle?.submitter?.telegramId || 'نامشخص'}</div>
                 </div>
               </DialogDescription>
             </DialogHeader>
@@ -1502,18 +1505,37 @@ export default function AdminPanelEnhanced() {
               <div className="space-y-6">
                 {/* Raffle Information */}
                 <div className="bg-telegram-bg-secondary dark:bg-telegram-bg-dark border border-telegram-border dark:border-telegram-border-dark p-4 rounded-lg">
-                  <h3 className="font-medium mb-2 text-telegram dark:text-telegram-dark">اطلاعات درخواست:</h3>
-                  <div className="flex items-center gap-2 mb-2">
-                    {selectedRaffle.prizeType === 'stars' && <Star className="w-4 h-4 star-icon" />}
-                    {selectedRaffle.prizeType === 'premium' && <Crown className="w-4 h-4 text-telegram-warning" />}
-                    {selectedRaffle.prizeType === 'mixed' && <Crown className="w-4 h-4 text-purple-500" />}
-                    <span className="font-medium text-telegram dark:text-telegram-dark">
-                      {selectedRaffle.prizeType === 'stars' && `${selectedRaffle.prizeValue} ستاره`}
-                      {selectedRaffle.prizeType === 'premium' && `${selectedRaffle.prizeValue} ماه پرمیوم`}
-                      {selectedRaffle.prizeType === 'mixed' && `${selectedRaffle.prizeValue} ستاره + پرمیوم`}
-                    </span>
+                  <h3 className="font-medium mb-3 text-telegram dark:text-telegram-dark">اطلاعات درخواست:</h3>
+                  
+                  {/* Submitter Information */}
+                  <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      ارسال‌کننده: {selectedRaffle?.submitter?.telegramId || 'نامشخص'} - {selectedRaffle?.submitter?.fullName || 'نامشخص'} - سطح {selectedRaffle?.submitter?.level || 'نامشخص'}
+                    </div>
                   </div>
 
+                  {/* Message Link */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">لینک پیام قرعه‌کشی:</label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={editedMessageLink || selectedRaffle?.messageLink || ""}
+                        onChange={(e) => setEditedMessageLink(e.target.value)}
+                        placeholder="لینک پیام قرعه‌کشی..."
+                        className="flex-1"
+                      />
+                      {selectedRaffle?.messageLink && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(selectedRaffle.messageLink, '_blank')}
+                          className="whitespace-nowrap"
+                        >
+                          مشاهده
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Action Selection */}
@@ -1666,6 +1688,7 @@ export default function AdminPanelEnhanced() {
                     onClick={() => {
                       setShowReviewDialog(false);
                       setSelectedAction(null);
+                      setEditedMessageLink("");
                     }}
                     className="flex-1"
                   >
