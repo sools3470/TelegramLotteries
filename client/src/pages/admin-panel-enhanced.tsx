@@ -1091,7 +1091,7 @@ export default function AdminPanelEnhanced() {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container admin-panel-container">
       {/* Debug Panel - for admin */}
       <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
         <div>showScrollToTop: {showScrollToTop.toString()}</div>
@@ -1304,11 +1304,39 @@ export default function AdminPanelEnhanced() {
         >
           Clear Test Content
         </Button>
+        
+        {/* Test scroll container info */}
+        <Button
+          onClick={() => {
+            const containers = [
+              '.tab-content-enter',
+              '[data-radix-tabs-content]',
+              '[data-state="active"]',
+              '.main-content',
+              '.app-container'
+            ];
+            
+            let debugMsg = 'Container Info:\n';
+            containers.forEach(selector => {
+              const element = document.querySelector(selector);
+              if (element) {
+                debugMsg += `${selector}: ${element.scrollHeight}/${element.clientHeight} (scrollable: ${element.scrollHeight > element.clientHeight})\n`;
+              } else {
+                debugMsg += `${selector}: Not found\n`;
+              }
+            });
+            
+            setDebugInfo(debugMsg);
+          }}
+          className="bg-purple-500 hover:bg-purple-600 text-white text-xs ml-2"
+        >
+          Container Info
+        </Button>
       </div>
 
-      <div className="main-content p-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full mb-6 ${
+      <div className="main-content">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
+          <TabsList className={`grid w-full mb-6 p-4 ${
             isKing ? 'grid-cols-4' : 
             isLevel1Admin ? 'grid-cols-3' : 
             'grid-cols-2'
@@ -1337,7 +1365,7 @@ export default function AdminPanelEnhanced() {
           </TabsList>
 
           {/* Raffles Management Tab */}
-          <TabsContent value="raffles" className="space-y-6 animate-fade-in">
+          <TabsContent value="raffles" className="space-y-6 animate-fade-in p-4">
             <Card className="telegram-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1383,7 +1411,7 @@ export default function AdminPanelEnhanced() {
 
           {/* Sponsor Channels Tab - Only for King and Level 1 Admins */}
           {(isKing || isLevel1Admin) && (
-            <TabsContent value="sponsors" className="space-y-6 animate-fade-in">
+            <TabsContent value="sponsors" className="space-y-6 animate-fade-in p-4">
             <Card className="telegram-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1687,7 +1715,7 @@ export default function AdminPanelEnhanced() {
 
           {/* Admins Management Tab - Only for King */}
           {isKing && (
-            <TabsContent value="admins" className="space-y-6 animate-fade-in">
+            <TabsContent value="admins" className="space-y-6 animate-fade-in p-4">
             {isKing ? (
               <Card className="telegram-card">
                 <CardHeader>
@@ -1827,7 +1855,7 @@ export default function AdminPanelEnhanced() {
           )}
 
           {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6 animate-fade-in">
+          <TabsContent value="profile" className="space-y-6 animate-fade-in p-4">
             <Card className="telegram-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

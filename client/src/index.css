@@ -811,3 +811,64 @@
     bottom: 5rem; /* Account for bottom navigation */
   }
 }
+
+/* Admin Panel Specific Styles for Proper Scrolling */
+.admin-panel-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-panel-container .main-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-panel-container .main-content > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-panel-container [data-radix-tabs-content] {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  padding: 1rem;
+}
+
+.admin-panel-container [data-state="active"] {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Ensure tab content is scrollable */
+.admin-panel-container .space-y-6 {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Fix for TabsContent component */
+.admin-panel-container [role="tabpanel"] {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+}
+
+/* Ensure cards don't interfere with scrolling */
+.admin-panel-container .telegram-card {
+  margin-bottom: 1rem;
+}
+
+/* Debug panel positioning */
+.admin-panel-container .fixed {
+  z-index: 9999;
+}
