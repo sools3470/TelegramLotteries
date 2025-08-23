@@ -997,9 +997,32 @@ export default function AdminPanelEnhanced() {
         <div>userType: {user?.userType}</div>
         <div>adminLevel: {user?.adminLevel}</div>
         <div>activeTab: {activeTab}</div>
+        <div>tabContent: {document.querySelector('[data-radix-tabs-content]') ? 'Found' : 'Not Found'}</div>
+        <div>mainContent: {document.querySelector('.main-content') ? 'Found' : 'Not Found'}</div>
+        <div>appContainer: {document.querySelector('.app-container') ? 'Found' : 'Not Found'}</div>
       </div>
 
-      
+      {/* Test Button - Temporary */}
+      <div className="fixed top-4 left-4 z-[9999]">
+        <Button
+          onClick={() => {
+            console.log('Test button clicked');
+            const mainContainer = document.querySelector('.tab-content-enter') || 
+                                 document.querySelector('[data-radix-tabs-content]') ||
+                                 document.querySelector('.main-content') ||
+                                 document.querySelector('.app-container');
+            console.log('Main container found:', !!mainContainer);
+            if (mainContainer) {
+              console.log('Container scrollTop:', mainContainer.scrollTop);
+              console.log('Container scrollHeight:', mainContainer.scrollHeight);
+              console.log('Container clientHeight:', mainContainer.clientHeight);
+            }
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white text-xs"
+        >
+          Test Scroll
+        </Button>
+      </div>
 
       <div className="main-content p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
