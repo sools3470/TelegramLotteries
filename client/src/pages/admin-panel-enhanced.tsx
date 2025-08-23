@@ -443,7 +443,17 @@ export default function AdminPanelEnhanced() {
       }
       
       const scrollThreshold = 1;
-      setShowScrollToTop(scrollY > scrollThreshold);
+      const shouldShow = scrollY > scrollThreshold;
+      
+      console.log('Admin scroll debug:', {
+        mainContainer: !!mainContainer,
+        scrollY,
+        scrollThreshold,
+        shouldShow,
+        currentShowState: showScrollToTop
+      });
+      
+      setShowScrollToTop(shouldShow);
     };
 
     // Add scroll listener to the main container
@@ -452,13 +462,15 @@ export default function AdminPanelEnhanced() {
                          document.querySelector('.app-container');
     if (mainContainer) {
       mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('Admin: Added scroll listener to main container');
       return () => mainContainer.removeEventListener('scroll', handleScroll);
     } else {
       // Fallback to document scroll
       document.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('Admin: Added scroll listener to document');
       return () => document.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [showScrollToTop]);
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
@@ -974,7 +986,13 @@ export default function AdminPanelEnhanced() {
 
   return (
     <div className="app-container">
-
+      {/* Debug Panel - for admin */}
+      <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
+        <div>showScrollToTop: {showScrollToTop.toString()}</div>
+        <div>userType: {user?.userType}</div>
+        <div>adminLevel: {user?.adminLevel}</div>
+        <div>activeTab: {activeTab}</div>
+      </div>
 
       <div className="main-content p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
