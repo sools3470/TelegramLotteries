@@ -369,7 +369,7 @@ function RafflesList({
                           console.log('OriginalLink field:', raffle.originalLink);
                           console.log('All raffle fields:', Object.keys(raffle));
                           setSelectedRaffle?.(raffle);
-                          setEditedMessageLink(raffle.messageLink || raffle.link || raffle.url || raffle.messageUrl || raffle.telegramMessageUrl || raffle.originalLink || "");
+                          setEditedMessageLink(raffle.messageLink || raffle.link || raffle.url || raffle.messageUrl || raffle.telegramMessageUrl || raffle.originalLink || raffle.originalData?.messageUrl || "");
                           setShowReviewDialog?.(true);
                         }}
                       >
@@ -806,7 +806,7 @@ export default function AdminPanelEnhanced() {
       raffleId: selectedRaffle.id,
       level: data.level,
       reason: data.reason,
-      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink
+      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink || selectedRaffle.originalData?.messageUrl
     });
   };
 
@@ -814,7 +814,7 @@ export default function AdminPanelEnhanced() {
     if (!selectedRaffle) return;
     rejectRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
-      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink,
+      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink || selectedRaffle.originalData?.messageUrl,
       ...data
     });
   };
@@ -1531,16 +1531,16 @@ export default function AdminPanelEnhanced() {
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">لینک پیام قرعه‌کشی:</label>
                     <div className="flex gap-2">
                       <Input
-                        value={editedMessageLink || selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || ""}
+                        value={editedMessageLink || selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl || ""}
                         onChange={(e) => setEditedMessageLink(e.target.value)}
                         placeholder="لینک پیام قرعه‌کشی..."
                         className="flex-1"
                       />
-                      {(selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink) && (
+                      {(selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl) && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink, '_blank')}
+                          onClick={() => window.open(selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink || selectedRaffle.originalData?.messageUrl, '_blank')}
                           className="whitespace-nowrap"
                         >
                           مشاهده
