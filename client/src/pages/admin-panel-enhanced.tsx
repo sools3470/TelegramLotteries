@@ -359,8 +359,13 @@ function RafflesList({
                         size="sm"
                         className="bg-blue-500 hover:bg-blue-600 text-white"
                         onClick={() => {
+                          console.log('Selected raffle data:', raffle);
+                          console.log('Submitter data:', raffle.submitter);
+                          console.log('Message link:', raffle.messageLink);
+                          console.log('Link field:', raffle.link);
+                          console.log('Url field:', raffle.url);
                           setSelectedRaffle?.(raffle);
-                          setEditedMessageLink(raffle.messageLink || "");
+                          setEditedMessageLink(raffle.messageLink || raffle.link || raffle.url || "");
                           setShowReviewDialog?.(true);
                         }}
                       >
@@ -797,7 +802,7 @@ export default function AdminPanelEnhanced() {
       raffleId: selectedRaffle.id,
       level: data.level,
       reason: data.reason,
-      messageLink: editedMessageLink || selectedRaffle.messageLink
+      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url
     });
   };
 
@@ -805,7 +810,7 @@ export default function AdminPanelEnhanced() {
     if (!selectedRaffle) return;
     rejectRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
-      messageLink: editedMessageLink || selectedRaffle.messageLink,
+      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url,
       ...data
     });
   };
@@ -1513,7 +1518,7 @@ export default function AdminPanelEnhanced() {
                   {/* Submitter Information */}
                   <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded">
                     <div className="text-sm text-gray-700 dark:text-gray-300">
-                      ارسال‌کننده: {selectedRaffle?.submitter?.telegramId || 'نامشخص'} - {selectedRaffle?.submitter?.fullName || 'نامشخص'} - سطح {selectedRaffle?.submitter?.level || 'نامشخص'}
+                      ارسال‌کننده: {selectedRaffle?.submitter?.telegramId || 'نامشخص'} - {selectedRaffle?.submitter?.username || selectedRaffle?.submitter?.fullName || selectedRaffle?.submitter?.firstName || 'نامشخص'} - سطح {selectedRaffle?.submitter?.level || 'نامشخص'}
                     </div>
                   </div>
 
@@ -1522,16 +1527,16 @@ export default function AdminPanelEnhanced() {
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">لینک پیام قرعه‌کشی:</label>
                     <div className="flex gap-2">
                       <Input
-                        value={editedMessageLink || selectedRaffle?.messageLink || ""}
+                        value={editedMessageLink || selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || ""}
                         onChange={(e) => setEditedMessageLink(e.target.value)}
                         placeholder="لینک پیام قرعه‌کشی..."
                         className="flex-1"
                       />
-                      {selectedRaffle?.messageLink && (
+                      {(selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url) && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(selectedRaffle.messageLink, '_blank')}
+                          onClick={() => window.open(selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url, '_blank')}
                           className="whitespace-nowrap"
                         >
                           مشاهده
