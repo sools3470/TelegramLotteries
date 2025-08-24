@@ -106,22 +106,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Comprehensive duplicate check by messageUrl across all statuses
+        // Check for duplicates: pending/rejected based on original URL, approved based on final URL
         const allPending = await storage.getRafflesByStatus("pending");
         const allApproved = await storage.getRafflesByStatus("approved");
         const allRejected = await storage.getRafflesByStatus("rejected");
-        const allRaffles = [...allPending, ...allApproved, ...allRejected];
         
-        console.log('Checking for duplicates. Total raffles:', allRaffles.length);
-        console.log('Looking for messageUrl:', payload.messageUrl);
-        console.log('All raffles originalData:', allRaffles.map(r => ({ 
-          id: r.id, 
-          messageUrl: r.originalData?.messageUrl, 
-          status: r.status,
-          submitterId: r.submitterId 
-        })));
+        console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
         
-        const duplicate = allRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        // Check pending and rejected raffles (based on original URL)
+        const pendingRejectedRaffles = [...allPending, ...allRejected];
+        const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        
+        // Check approved raffles (based on final URL - messageLink field)
+        const duplicateApproved = allApproved.find(r => r.messageLink === payload.messageUrl);
+        
+        const duplicate = duplicatePendingRejected || duplicateApproved;
         
         if (duplicate) {
           console.log('Found duplicate:', duplicate);

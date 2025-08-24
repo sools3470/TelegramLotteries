@@ -1529,24 +1529,24 @@ export default function AdminPanelEnhanced() {
                   {/* Message Link */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">لینک پیام قرعه‌کشی:</label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={editedMessageLink || selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl || ""}
-                        onChange={(e) => setEditedMessageLink(e.target.value)}
-                        placeholder="لینک پیام قرعه‌کشی..."
-                        className="flex-1"
-                      />
-                      {(selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl) && (
+                    <Input
+                      value={editedMessageLink || selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl || ""}
+                      onChange={(e) => setEditedMessageLink(e.target.value)}
+                      placeholder="لینک پیام قرعه‌کشی..."
+                      className="w-full"
+                    />
+                    {(selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl) && (
+                      <div className="flex justify-end">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => window.open(selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink || selectedRaffle.originalData?.messageUrl, '_blank')}
                           className="whitespace-nowrap"
                         >
-                          مشاهده
+                          مشاهده لینک
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
