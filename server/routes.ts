@@ -117,8 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const pendingRejectedRaffles = [...allPending, ...allRejected];
         const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
         
-        // Check approved raffles (based on final URL - messageLink field)
-        const duplicateApproved = allApproved.find(r => r.messageLink === payload.messageUrl);
+        // Check approved raffles (based on final URL - messageUrl field)
+        const duplicateApproved = allApproved.find(r => r.messageUrl === payload.messageUrl);
         
         const duplicate = duplicatePendingRejected || duplicateApproved;
         
@@ -224,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin route for approving raffles with level assignment
   app.patch("/api/raffles/:id/approve", async (req, res) => {
     try {
-      const { levelRequired, adminUserId, status } = req.body;
+      const { levelRequired, adminUserId, status, messageUrl } = req.body;
       
       // Check if user is bot admin
       const admin = await storage.getUser(adminUserId);
@@ -232,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const raffle = await storage.approveRaffleWithLevel(req.params.id, levelRequired, adminUserId);
+      const raffle = await storage.approveRaffleWithLevel(req.params.id, levelRequired, adminUserId, messageUrl);
       if (!raffle) {
         return res.status(404).json({ message: "Raffle not found" });
       }
@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/raffles/:id/reject", async (req, res) => {
     try {
-      const { adminUserId, reason, restriction } = req.body;
+      const { adminUserId, reason, restriction, messageUrl } = req.body;
       
       // Check if user is bot admin
       const admin = await storage.getUser(adminUserId);
@@ -252,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const raffle = await storage.rejectRaffle(req.params.id, reason, restriction || { type: "none" }, adminUserId);
+      const raffle = await storage.rejectRaffle(req.params.id, reason, restriction || { type: "none" }, adminUserId, messageUrl);
       if (!raffle) {
         return res.status(404).json({ message: "Raffle not found" });
       }

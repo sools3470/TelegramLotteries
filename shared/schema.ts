@@ -95,6 +95,7 @@ export const raffles = pgTable("raffles", {
   participantCount: integer("participant_count").notNull().default(0),
   version: integer("version").notNull().default(1), // Version tracking for edits
   originalData: jsonb("original_data"), // Store original submission for version history
+  messageUrl: text("message_url"), // لینک نهایی تایید شده توسط مدیر
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

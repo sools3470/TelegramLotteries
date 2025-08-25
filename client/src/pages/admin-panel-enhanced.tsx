@@ -361,15 +361,12 @@ function RafflesList({
                         onClick={() => {
                           console.log('Selected raffle data:', raffle);
                           console.log('Submitter data:', raffle.submitter);
-                          console.log('Message link:', raffle.messageLink);
-                          console.log('Link field:', raffle.link);
-                          console.log('Url field:', raffle.url);
+                          console.log('Message link:', raffle.messageUrl);
                           console.log('MessageUrl field:', raffle.messageUrl);
                           console.log('TelegramMessageUrl field:', raffle.telegramMessageUrl);
-                          console.log('OriginalLink field:', raffle.originalLink);
-                          console.log('All raffle fields:', Object.keys(raffle));
+                          console.log('Original data:', raffle.originalData);
                           setSelectedRaffle?.(raffle);
-                          setEditedMessageLink(raffle.messageLink || raffle.link || raffle.url || raffle.messageUrl || raffle.telegramMessageUrl || raffle.originalLink || raffle.originalData?.messageUrl || "");
+                          setEditedMessageLink(raffle.messageUrl || raffle.originalData?.messageUrl || "");
                           setShowReviewDialog?.(true);
                         }}
                       >
@@ -548,7 +545,7 @@ export default function AdminPanelEnhanced() {
 
   // Approve raffle mutation
   const approveRaffleMutation = useMutation({
-    mutationFn: async (data: { raffleId: string; level: number; reason?: string }) => {
+    mutationFn: async (data: { raffleId: string; level: number; reason?: string; messageUrl?: string }) => {
       const response = await fetch(`/api/raffles/${data.raffleId}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -556,7 +553,8 @@ export default function AdminPanelEnhanced() {
           status: 'approved',
           levelRequired: data.level,
           adminUserId: user?.id,
-          reason: data.reason
+          reason: data.reason,
+          messageUrl: data.messageUrl
         })
       });
       if (!response.ok) throw new Error('Failed to approve raffle');
@@ -580,7 +578,7 @@ export default function AdminPanelEnhanced() {
 
   // Reject raffle mutation
   const rejectRaffleMutation = useMutation({
-    mutationFn: async (data: { raffleId: string } & RejectionData) => {
+    mutationFn: async (data: { raffleId: string; messageUrl?: string } & RejectionData) => {
       const restriction = data.restrictionType !== "none" ? {
         type: data.restrictionType,
         start: data.restrictionStart,
@@ -594,7 +592,8 @@ export default function AdminPanelEnhanced() {
           status: 'rejected',
           reason: data.reason,
           restriction,
-          adminUserId: user?.id
+          adminUserId: user?.id,
+          messageUrl: data.messageUrl
         })
       });
       if (!response.ok) throw new Error('Failed to reject raffle');
@@ -802,19 +801,21 @@ export default function AdminPanelEnhanced() {
 
   const onLevelApprovalSubmit = (data: LevelApprovalData) => {
     if (!selectedRaffle) return;
+    const finalMessageUrl = editedMessageLink || selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl || "";
     approveRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
       level: data.level,
       reason: data.reason,
-      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink || selectedRaffle.originalData?.messageUrl
+      messageUrl: finalMessageUrl
     });
   };
 
   const onRejectionSubmit = (data: RejectionData) => {
     if (!selectedRaffle) return;
+    const finalMessageUrl = editedMessageLink || selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl || "";
     rejectRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
-      messageLink: editedMessageLink || selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink || selectedRaffle.originalData?.messageUrl,
+      messageUrl: finalMessageUrl,
       ...data
     });
   };
@@ -1530,18 +1531,18 @@ export default function AdminPanelEnhanced() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">لینک پیام قرعه‌کشی:</label>
                     <Input
-                      value={editedMessageLink || selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl || ""}
+                      value={editedMessageLink || selectedRaffle?.messageUrl || selectedRaffle?.originalData?.messageUrl || ""}
                       onChange={(e) => setEditedMessageLink(e.target.value)}
                       placeholder="لینک پیام قرعه‌کشی..."
                       className="w-full"
                     />
-                    {(selectedRaffle?.messageLink || selectedRaffle?.link || selectedRaffle?.url || selectedRaffle?.messageUrl || selectedRaffle?.telegramMessageUrl || selectedRaffle?.originalLink || selectedRaffle?.originalData?.messageUrl) && (
-                      <div className="flex justify-end">
+                    {(selectedRaffle?.messageUrl || selectedRaffle?.originalData?.messageUrl) && (
+                      <div className="mt-2">
                         <Button
-                          size="sm"
+                          type="button"
                           variant="outline"
-                          onClick={() => window.open(selectedRaffle.messageLink || selectedRaffle.link || selectedRaffle.url || selectedRaffle.messageUrl || selectedRaffle.telegramMessageUrl || selectedRaffle.originalLink || selectedRaffle.originalData?.messageUrl, '_blank')}
-                          className="whitespace-nowrap"
+                          size="sm"
+                          onClick={() => window.open(selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl, '_blank')}
                         >
                           مشاهده لینک
                         </Button>
