@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Check for duplicates: pending/rejected based on original URL, approved based on final URL
+        // Check for duplicates: pending/rejected based on original URL, approved based on both original and final URL
         const allPending = await storage.getRafflesByStatus("pending");
         const allApproved = await storage.getRafflesByStatus("approved");
         const allRejected = await storage.getRafflesByStatus("rejected");
@@ -117,15 +117,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const pendingRejectedRaffles = [...allPending, ...allRejected];
         const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
         
-        // Check approved raffles (based on final URL - messageLink field)
-        const duplicateApproved = allApproved.find(r => r.messageLink === payload.messageUrl);
+        // Check approved raffles (based on both original URL and final URL)
+        const duplicateApprovedByOriginal = allApproved.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        const duplicateApprovedByFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
         
-        const duplicate = duplicatePendingRejected || duplicateApproved;
+        console.log('Duplicate check results:', {
+          duplicatePendingRejected: duplicatePendingRejected?.id,
+          duplicateApprovedByOriginal: duplicateApprovedByOriginal?.id,
+          duplicateApprovedByFinal: duplicateApprovedByFinal?.id,
+          totalApproved: allApproved.length,
+          totalPending: allPending.length,
+          totalRejected: allRejected.length
+        });
+        
+        const duplicate = duplicatePendingRejected || duplicateApprovedByOriginal || duplicateApprovedByFinal;
         
         if (duplicate) {
           console.log('Found duplicate:', duplicate);
           const isSameUser = duplicate.submitterId === payload.submitterId;
           const status = duplicate.status;
+          
+          // Determine the type of duplicate for better messaging
+          let duplicateType = "unknown";
+          if (duplicatePendingRejected) {
+            duplicateType = "pending_rejected";
+          } else if (duplicateApprovedByOriginal) {
+            duplicateType = "approved_original";
+          } else if (duplicateApprovedByFinal) {
+            duplicateType = "approved_final";
+          }
           
           if (status === "rejected") {
             return res.status(400).json({ 
@@ -134,13 +154,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (status === "approved" || status === "pending") {
             if (isSameUser) {
               const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
+              const duplicateText = duplicateType === "approved_original" ? 
+                "این لینک قبلاً توسط شما ارسال شده و تایید شده است" :
+                duplicateType === "approved_final" ? 
+                "این لینک قبلاً توسط شما ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
+                "این قرعه‌کشی قبلاً توسط شما ارسال شده است";
               return res.status(400).json({ 
-                message: `این قرعه‌کشی تکراریست و قبلا توسط شما ارسال شده است. وضعیت: ${statusText}` 
+                message: `${duplicateText}. وضعیت: ${statusText}` 
               });
             } else {
               const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
+              const duplicateText = duplicateType === "approved_original" ? 
+                "این لینک قبلاً توسط سایر کاربران ارسال شده و تایید شده است" :
+                duplicateType === "approved_final" ? 
+                "این لینک قبلاً توسط سایر کاربران ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
+                "این قرعه‌کشی قبلاً توسط سایر کاربران ارسال شده است";
               return res.status(400).json({ 
-                message: `این قرعه‌کشی تکراریست و قبلا توسط سایر کاربران ارسال شده است. وضعیت: ${statusText}` 
+                message: `${duplicateText}. وضعیت: ${statusText}` 
               });
             }
           }
@@ -224,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin route for approving raffles with level assignment
   app.patch("/api/raffles/:id/approve", async (req, res) => {
     try {
-      const { levelRequired, adminUserId, status } = req.body;
+      const { levelRequired, adminUserId, status, messageUrl } = req.body;
       
       // Check if user is bot admin
       const admin = await storage.getUser(adminUserId);
@@ -232,7 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const raffle = await storage.approveRaffleWithLevel(req.params.id, levelRequired, adminUserId);
+      const raffle = await storage.approveRaffleWithLevel(req.params.id, levelRequired, adminUserId, messageUrl);
       if (!raffle) {
         return res.status(404).json({ message: "Raffle not found" });
       }
@@ -244,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/raffles/:id/reject", async (req, res) => {
     try {
-      const { adminUserId, reason, restriction } = req.body;
+      const { adminUserId, reason, restriction, messageUrl } = req.body;
       
       // Check if user is bot admin
       const admin = await storage.getUser(adminUserId);
@@ -252,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const raffle = await storage.rejectRaffle(req.params.id, reason, restriction || { type: "none" }, adminUserId);
+      const raffle = await storage.rejectRaffle(req.params.id, reason, restriction || { type: "none" }, adminUserId, messageUrl);
       if (!raffle) {
         return res.status(404).json({ message: "Raffle not found" });
       }

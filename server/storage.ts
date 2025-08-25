@@ -45,8 +45,8 @@ export interface IStorage {
   createRaffle(raffle: InsertRaffle): Promise<Raffle>;
   updateRaffle(id: string, updates: Partial<Raffle>): Promise<Raffle | undefined>;
   getRafflesBySubmitter(submitterId: string): Promise<Raffle[]>;
-  approveRaffleWithLevel(id: string, levelRequired: number, adminUserId: string): Promise<Raffle | undefined>;
-  rejectRaffle(id: string, reason: string, restriction: any, adminUserId: string): Promise<Raffle | undefined>;
+  approveRaffleWithLevel(id: string, levelRequired: number, adminUserId: string, messageUrl?: string): Promise<Raffle | undefined>;
+  rejectRaffle(id: string, reason: string, restriction: any, adminUserId: string, messageUrl?: string): Promise<Raffle | undefined>;
   getTodaysRaffles(userLevel: number): Promise<Raffle[]>;
   getEndedRaffles(userLevel: number): Promise<Raffle[]>;
   deleteRaffle(id: string): Promise<boolean>;
@@ -311,20 +311,26 @@ export class DatabaseStorage implements IStorage {
     return await this.updateUser(userId, { level: newLevel });
   }
 
-  async approveRaffleWithLevel(id: string, levelRequired: number, adminUserId: string): Promise<Raffle | undefined> {
+  async approveRaffleWithLevel(id: string, levelRequired: number, adminUserId: string, messageUrl?: string): Promise<Raffle | undefined> {
     return await this.updateRaffle(id, { 
       status: "approved" as any, 
       levelRequired,
-      reviewerId: adminUserId
+      reviewerId: adminUserId,
+      messageUrl: messageUrl // لینک نهایی تایید شده توسط مدیر
     });
   }
 
-  async rejectRaffle(id: string, reason: string, restriction: any, adminUserId: string): Promise<Raffle | undefined> {
+  async rejectRaffle(id: string, reason: string, restriction: any, adminUserId: string, messageUrl?: string): Promise<Raffle | undefined> {
     const updates: any = { 
       status: "rejected" as any, 
       rejectionReason: reason,
       reviewerId: adminUserId
     };
+
+    // اگر messageUrl ارسال شده باشد، آن را ذخیره کنیم
+    if (messageUrl) {
+      updates.messageUrl = messageUrl;
+    }
 
     // Handle user restriction if specified
     if (restriction.type !== "none") {
