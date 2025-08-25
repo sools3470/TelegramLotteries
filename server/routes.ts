@@ -106,16 +106,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Duplicate detection: ONLY check approved raffles by final messageUrl
+        // Duplicate detection:
+        // - pending/rejected: based on original URL (originalData.messageUrl)
+        // - approved: ONLY based on final URL (messageUrl)
+        const allPending = await storage.getRafflesByStatus("pending");
         const allApproved = await storage.getRafflesByStatus("approved");
+        const allRejected = await storage.getRafflesByStatus("rejected");
         
-        console.log('Checking for duplicates (approved only). Looking for messageUrl:', payload.messageUrl);
+        console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
         
-        // Check approved raffles (based on final URL - messageUrl field)
-        const duplicate = allApproved.find(r => r.messageUrl === payload.messageUrl);
+        const pendingRejectedRaffles = [...allPending, ...allRejected];
+        const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        const duplicateApprovedByFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
+        
+        const duplicate = duplicatePendingRejected || duplicateApprovedByFinal;
         
         if (duplicate) {
-          console.log('Found duplicate approved raffle:', duplicate?.id);
+          console.log('Found duplicate:', duplicate?.id);
           const isSameUser = duplicate.submitterId === payload.submitterId;
           const status = duplicate.status;
           
@@ -137,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         } else {
-          console.log('No duplicate found in approved raffles, proceeding with creation');
+          console.log('No duplicate found, proceeding with creation');
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids
