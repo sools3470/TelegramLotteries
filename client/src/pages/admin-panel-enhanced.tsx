@@ -366,7 +366,7 @@ function RafflesList({
                           console.log('TelegramMessageUrl field:', raffle.telegramMessageUrl);
                           console.log('Original data:', raffle.originalData);
                           setSelectedRaffle?.(raffle);
-                          setEditedMessageLink(raffle.messageUrl || raffle.originalData?.messageUrl || "");
+                          setEditedMessageLink(raffle.originalData?.messageUrl || "");
                           setShowReviewDialog?.(true);
                         }}
                       >
@@ -801,7 +801,9 @@ export default function AdminPanelEnhanced() {
 
   const onLevelApprovalSubmit = (data: LevelApprovalData) => {
     if (!selectedRaffle) return;
-    const finalMessageUrl = editedMessageLink || selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl || "";
+    // اگر مدیر لینک را ویرایش کرده باشد، از editedMessageLink استفاده کن
+    // در غیر این صورت از لینک اصلی کاربر استفاده کن
+    const finalMessageUrl = editedMessageLink || selectedRaffle.originalData?.messageUrl || "";
     approveRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
       level: data.level,
@@ -812,7 +814,9 @@ export default function AdminPanelEnhanced() {
 
   const onRejectionSubmit = (data: RejectionData) => {
     if (!selectedRaffle) return;
-    const finalMessageUrl = editedMessageLink || selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl || "";
+    // اگر مدیر لینک را ویرایش کرده باشد، از editedMessageLink استفاده کن
+    // در غیر این صورت از لینک اصلی کاربر استفاده کن
+    const finalMessageUrl = editedMessageLink || selectedRaffle.originalData?.messageUrl || "";
     rejectRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
       messageUrl: finalMessageUrl,
