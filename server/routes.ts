@@ -106,34 +106,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Check for duplicates: pending/rejected based on original URL, approved based on both original and final URL
-        const allPending = await storage.getRafflesByStatus("pending");
+        // Duplicate detection: ONLY check approved raffles by final messageUrl
         const allApproved = await storage.getRafflesByStatus("approved");
-        const allRejected = await storage.getRafflesByStatus("rejected");
         
-        console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
+        console.log('Checking for duplicates (approved only). Looking for messageUrl:', payload.messageUrl);
         
-        // Check pending and rejected raffles (based on original URL)
-        const pendingRejectedRaffles = [...allPending, ...allRejected];
-        const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
-        
-        // Check approved raffles (based on both original URL and final URL)
-        const duplicateApprovedByOriginal = allApproved.find(r => r.originalData?.messageUrl === payload.messageUrl);
-        const duplicateApprovedByFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
-        
-        console.log('Duplicate check results:', {
-          duplicatePendingRejected: duplicatePendingRejected?.id,
-          duplicateApprovedByOriginal: duplicateApprovedByOriginal?.id,
-          duplicateApprovedByFinal: duplicateApprovedByFinal?.id,
-          totalApproved: allApproved.length,
-          totalPending: allPending.length,
-          totalRejected: allRejected.length
-        });
-        
-        const duplicate = duplicatePendingRejected || duplicateApprovedByOriginal || duplicateApprovedByFinal;
+        // Check approved raffles (based on final URL - messageUrl field)
+        const duplicate = allApproved.find(r => r.messageUrl === payload.messageUrl);
         
         if (duplicate) {
-          console.log('Found duplicate:', duplicate);
+          console.log('Found duplicate approved raffle:', duplicate?.id);
           const isSameUser = duplicate.submitterId === payload.submitterId;
           const status = duplicate.status;
           
@@ -155,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         } else {
-          console.log('No duplicate found, proceeding with creation');
+          console.log('No duplicate found in approved raffles, proceeding with creation');
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids
