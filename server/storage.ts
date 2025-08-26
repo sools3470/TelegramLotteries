@@ -221,6 +221,7 @@ export class DatabaseStorage implements IStorage {
       status: raffles.status,
       rejectionReason: raffles.rejectionReason,
       originalData: raffles.originalData,
+      messageUrl: raffles.messageUrl,
       createdAt: raffles.createdAt,
       updatedAt: raffles.updatedAt,
       submitter: {
@@ -253,6 +254,7 @@ export class DatabaseStorage implements IStorage {
       status: raffles.status,
       rejectionReason: raffles.rejectionReason,
       originalData: raffles.originalData,
+      messageUrl: raffles.messageUrl,
       createdAt: raffles.createdAt,
       updatedAt: raffles.updatedAt,
       submitter: {
@@ -266,19 +268,10 @@ export class DatabaseStorage implements IStorage {
     })
     .from(raffles)
     .leftJoin(users, eq(raffles.submitterId, users.id))
-    .where(eq(raffles.status, status as any));
+    .where(eq(raffles.status, status as any))
+    .orderBy(desc(raffles.createdAt));
 
-    // Apply different ordering based on status
-    if (status === 'pending') {
-      // For pending: oldest submissions first (FIFO for fair review)
-      return await query.orderBy(asc(raffles.createdAt));
-    } else if (status === 'approved' || status === 'rejected') {
-      // For approved/rejected: newest decisions first (recent admin actions first)
-      return await query.orderBy(desc(raffles.updatedAt));
-    } else {
-      // Default ordering for any other status
-      return await query.orderBy(desc(raffles.createdAt));
-    }
+    return await query;
   }
 
   async getRafflesByLevelAndStatus(maxLevel: number, status: string): Promise<Raffle[]> {
