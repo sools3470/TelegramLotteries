@@ -106,76 +106,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Check for duplicates: pending/rejected based on original URL, approved based on both original and final URL
-        const allPending = await storage.getRafflesByStatus("pending");
+        // Duplicate detection: ONLY check approved raffles by final messageUrl
         const allApproved = await storage.getRafflesByStatus("approved");
-        const allRejected = await storage.getRafflesByStatus("rejected");
-        
-        console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
-        
-        // Check pending and rejected raffles (based on original URL)
-        const pendingRejectedRaffles = [...allPending, ...allRejected];
-        const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
-        
-        // Check approved raffles (based on both original URL and final URL)
-        const duplicateApprovedByOriginal = allApproved.find(r => r.originalData?.messageUrl === payload.messageUrl);
-        const duplicateApprovedByFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
-        
-        console.log('Duplicate check results:', {
-          duplicatePendingRejected: duplicatePendingRejected?.id,
-          duplicateApprovedByOriginal: duplicateApprovedByOriginal?.id,
-          duplicateApprovedByFinal: duplicateApprovedByFinal?.id,
-          totalApproved: allApproved.length,
-          totalPending: allPending.length,
-          totalRejected: allRejected.length
-        });
-        
-        const duplicate = duplicatePendingRejected || duplicateApprovedByOriginal || duplicateApprovedByFinal;
-        
+        console.log('Checking for duplicates (approved only). Looking for messageUrl:', payload.messageUrl);
+        const duplicate = allApproved.find(r => r.messageUrl === payload.messageUrl);
         if (duplicate) {
-          console.log('Found duplicate:', duplicate);
           const isSameUser = duplicate.submitterId === payload.submitterId;
           const status = duplicate.status;
-          
-          // Determine the type of duplicate for better messaging
-          let duplicateType = "unknown";
-          if (duplicatePendingRejected) {
-            duplicateType = "pending_rejected";
-          } else if (duplicateApprovedByOriginal) {
-            duplicateType = "approved_original";
-          } else if (duplicateApprovedByFinal) {
-            duplicateType = "approved_final";
-          }
-          
-          if (status === "rejected") {
-            return res.status(400).json({ 
-              message: "این قرعه‌کشی نامعتبر است. لطفا فقط لینک پیام قرعه‌کشی های رسمی تلگرام را وارد کنید." 
-            });
-          } else if (status === "approved" || status === "pending") {
+          if (status === "approved" || status === "pending") {
             if (isSameUser) {
               const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
-              const duplicateText = duplicateType === "approved_original" ? 
-                "این لینک قبلاً توسط شما ارسال شده و تایید شده است" :
-                duplicateType === "approved_final" ? 
-                "این لینک قبلاً توسط شما ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
-                "این قرعه‌کشی قبلاً توسط شما ارسال شده است";
               return res.status(400).json({ 
-                message: `${duplicateText}. وضعیت: ${statusText}` 
+                message: `این قرعه‌کشی تکراریست و قبلا توسط شما ارسال شده است. وضعیت: ${statusText}` 
               });
             } else {
               const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
-              const duplicateText = duplicateType === "approved_original" ? 
-                "این لینک قبلاً توسط سایر کاربران ارسال شده و تایید شده است" :
-                duplicateType === "approved_final" ? 
-                "این لینک قبلاً توسط سایر کاربران ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
-                "این قرعه‌کشی قبلاً توسط سایر کاربران ارسال شده است";
               return res.status(400).json({ 
-                message: `${duplicateText}. وضعیت: ${statusText}` 
+                message: `این قرعه‌کشی تکراریست و قبلا توسط سایر کاربران ارسال شده است. وضعیت: ${statusText}` 
               });
             }
           }
         } else {
-          console.log('No duplicate found, proceeding with creation');
+          console.log('No duplicate found in approved raffles, proceeding with creation');
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids
