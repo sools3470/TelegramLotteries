@@ -218,6 +218,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { levelRequired, adminUserId, status, messageUrl } = req.body;
       
+      console.log("[APPROVE] Incoming request:", {
+        raffleId: req.params.id,
+        levelRequired,
+        adminUserId,
+        messageUrl
+      });
+      
       // Check if user is bot admin
       const admin = await storage.getUser(adminUserId);
       if (!admin || admin.userType !== "bot_admin") {
@@ -228,6 +235,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!raffle) {
         return res.status(404).json({ message: "Raffle not found" });
       }
+      
+      console.log("[APPROVE] Stored result:", {
+        raffleId: raffle.id,
+        status: raffle.status,
+        messageUrl: (raffle as any).messageUrl
+      });
+      
       res.json(raffle);
     } catch (error) {
       res.status(500).json({ message: "Server error", error });
