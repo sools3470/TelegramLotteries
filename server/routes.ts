@@ -94,140 +94,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/raffles", async (req, res) => {
     try {
-      // Accept either legacy payload or new payload (adapter mode)
-      const isNewPayload = typeof req.body?.messageUrl === 'string';
-
-      if (isNewPayload) {
-        // New payload path: messageUrl-based
-        const newSchema = z.object({
-          messageUrl: z.string().min(1),
-          submitterId: z.string().min(1),
-          originalData: z.any().optional(),
-        });
-        const payload = newSchema.parse(req.body);
-
-        // Check for duplicates: pending/rejected based on original URL, approved based on both original and final URL
-        const allPending = await storage.getRafflesByStatus("pending");
-        const allApproved = await storage.getRafflesByStatus("approved");
-        const allRejected = await storage.getRafflesByStatus("rejected");
-        
-        console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
-        
-        // Check pending and rejected raffles (based on original URL)
-        const pendingRejectedRaffles = [...allPending, ...allRejected];
-        const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
-        
-        // Check approved raffles (based on both original URL and final URL)
-        const duplicateApprovedByOriginal = allApproved.find(r => r.originalData?.messageUrl === payload.messageUrl);
-        const duplicateApprovedByFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
-        
-        console.log('Duplicate check results:', {
-          duplicatePendingRejected: duplicatePendingRejected?.id,
-          duplicateApprovedByOriginal: duplicateApprovedByOriginal?.id,
-          duplicateApprovedByFinal: duplicateApprovedByFinal?.id,
-          totalApproved: allApproved.length,
-          totalPending: allPending.length,
-          totalRejected: allRejected.length
-        });
-        
-        const duplicate = duplicatePendingRejected || duplicateApprovedByOriginal || duplicateApprovedByFinal;
-        
-        if (duplicate) {
-          console.log('Found duplicate:', duplicate);
-          const isSameUser = duplicate.submitterId === payload.submitterId;
-          const status = duplicate.status;
-          
-          // Determine the type of duplicate for better messaging
-          let duplicateType = "unknown";
-          if (duplicatePendingRejected) {
-            duplicateType = "pending_rejected";
-          } else if (duplicateApprovedByOriginal) {
-            duplicateType = "approved_original";
-          } else if (duplicateApprovedByFinal) {
-            duplicateType = "approved_final";
-          }
-          
-          if (status === "rejected") {
-            return res.status(400).json({ 
-              message: "این قرعه‌کشی نامعتبر است. لطفا فقط لینک پیام قرعه‌کشی های رسمی تلگرام را وارد کنید." 
-            });
-          } else if (status === "approved" || status === "pending") {
-            if (isSameUser) {
-              const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
-              const duplicateText = duplicateType === "approved_original" ? 
-                "این لینک قبلاً توسط شما ارسال شده و تایید شده است" :
-                duplicateType === "approved_final" ? 
-                "این لینک قبلاً توسط شما ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
-                "این قرعه‌کشی قبلاً توسط شما ارسال شده است";
-              return res.status(400).json({ 
-                message: `${duplicateText}. وضعیت: ${statusText}` 
-              });
-            } else {
-              const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
-              const duplicateText = duplicateType === "approved_original" ? 
-                "این لینک قبلاً توسط سایر کاربران ارسال شده و تایید شده است" :
-                duplicateType === "approved_final" ? 
-                "این لینک قبلاً توسط سایر کاربران ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
-                "این قرعه‌کشی قبلاً توسط سایر کاربران ارسال شده است";
-              return res.status(400).json({ 
-                message: `${duplicateText}. وضعیت: ${statusText}` 
-              });
-            }
-          }
-        } else {
-          console.log('No duplicate found, proceeding with creation');
-        }
-
-        // Map to legacy required fields: synthesize placeholders + dummy ids
-        const legacy = {
-          channelId: "@unknown",
-          messageId: String(Date.now()),
-          forwardedMessageId: null,
-          prizeType: "stars", // Default, will be set by admin
-          prizeValue: undefined, // Will be set by admin
-          requiredChannels: ["TBD"], // Will be set by admin
-          raffleDateTime: new Date(), // Use Date object instead of ISO string
-          levelRequired: 1,
-          submitterId: payload.submitterId,
-          originalData: { ...payload },
-        } as any;
-
-        console.log('Creating raffle with legacy data:', legacy);
-        const raffle = await storage.createRaffle(legacy);
-        return res.json(raffle);
-      }
-
-      // Legacy payload path (unchanged)
-      const createRaffleSchema = z.object({
-        channelId: z.string().min(1),
-        messageId: z.string().min(1),
-        forwardedMessageId: z.string().nullable().optional(),
-        prizeType: z.enum(["stars", "premium", "mixed"]),
-        prizeValue: z.number().int().optional(),
-        requiredChannels: z.array(z.string()).min(0),
-        raffleDateTime: z.coerce.date(),
-        levelRequired: z.number().int().default(1),
+      // Accept only new payload: messageUrl-based
+      const newSchema = z.object({
+        messageUrl: z.string().min(1),
         submitterId: z.string().min(1),
         originalData: z.any().optional(),
       });
+      const payload = newSchema.parse(req.body);
 
-      const raffleData = createRaffleSchema.parse(req.body);
-
-      // Check for duplicate raffle (same channel + message ID)
-      const existingRaffles = await storage.getRafflesByStatus("pending");
-      const approvedRaffles = await storage.getRafflesByStatus("approved");
-      const allRaffles = [...existingRaffles, ...approvedRaffles];
-
-      const duplicate = allRaffles.find(r =>
-        r.channelId === raffleData.channelId && r.messageId === raffleData.messageId
-      );
-
+      // Check for duplicates: pending/rejected based on original URL, approved based on both original and final URL
+      const allPending = await storage.getRafflesByStatus("pending");
+      const allApproved = await storage.getRafflesByStatus("approved");
+      const allRejected = await storage.getRafflesByStatus("rejected");
+      
+      console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
+      
+      // Check pending and rejected raffles (based on original URL)
+      const pendingRejectedRaffles = [...allPending, ...allRejected];
+      const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
+      
+      // Check approved raffles (based on both original URL and final URL)
+      const duplicateApprovedByOriginal = allApproved.find(r => r.originalData?.messageUrl === payload.messageUrl);
+      const duplicateApprovedByFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
+      
+      console.log('Duplicate check results:', {
+        duplicatePendingRejected: duplicatePendingRejected?.id,
+        duplicateApprovedByOriginal: duplicateApprovedByOriginal?.id,
+        duplicateApprovedByFinal: duplicateApprovedByFinal?.id,
+        totalApproved: allApproved.length,
+        totalPending: allPending.length,
+        totalRejected: allRejected.length
+      });
+      
+      const duplicate = duplicatePendingRejected || duplicateApprovedByOriginal || duplicateApprovedByFinal;
+      
       if (duplicate) {
-        return res.status(400).json({ message: "Raffle with this channel and message already exists" });
+        console.log('Found duplicate:', duplicate);
+        const isSameUser = duplicate.submitterId === payload.submitterId;
+        const status = duplicate.status;
+        
+        // Determine the type of duplicate for better messaging
+        let duplicateType = "unknown";
+        if (duplicatePendingRejected) {
+          duplicateType = "pending_rejected";
+        } else if (duplicateApprovedByOriginal) {
+          duplicateType = "approved_original";
+        } else if (duplicateApprovedByFinal) {
+          duplicateType = "approved_final";
+        }
+        
+        if (status === "rejected") {
+          return res.status(400).json({ 
+            message: "این قرعه‌کشی نامعتبر است. لطفا فقط لینک پیام قرعه‌کشی های رسمی تلگرام را وارد کنید." 
+          });
+        } else if (status === "approved" || status === "pending") {
+          if (isSameUser) {
+            const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
+            const duplicateText = duplicateType === "approved_original" ? 
+              "این لینک قبلاً توسط شما ارسال شده و تایید شده است" :
+              duplicateType === "approved_final" ? 
+              "این لینک قبلاً توسط شما ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
+              "این قرعه‌کشی قبلاً توسط شما ارسال شده است";
+            return res.status(400).json({ 
+              message: `${duplicateText}. وضعیت: ${statusText}` 
+            });
+          } else {
+            const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
+            const duplicateText = duplicateType === "approved_original" ? 
+              "این لینک قبلاً توسط سایر کاربران ارسال شده و تایید شده است" :
+              duplicateType === "approved_final" ? 
+              "این لینک قبلاً توسط سایر کاربران ارسال شده و مدیر آن را ویرایش و تایید کرده است" :
+              "این قرعه‌کشی قبلاً توسط سایر کاربران ارسال شده است";
+            return res.status(400).json({ 
+              message: `${duplicateText}. وضعیت: ${statusText}` 
+            });
+          }
+        }
+      } else {
+        console.log('No duplicate found, proceeding with creation');
       }
 
-      const raffle = await storage.createRaffle(raffleData as any);
-      res.json(raffle);
+      // Map to legacy required fields: synthesize placeholders + dummy ids
+      const legacy = {
+        channelId: "@unknown",
+        messageId: String(Date.now()),
+        forwardedMessageId: null,
+        prizeType: "stars", // Default, will be set by admin
+        prizeValue: undefined, // Will be set by admin
+        requiredChannels: ["TBD"], // Will be set by admin
+        raffleDateTime: new Date(), // Use Date object instead of ISO string
+        levelRequired: 1,
+        submitterId: payload.submitterId,
+        originalData: { ...payload },
+      } as any;
+
+      console.log('Creating raffle with legacy data:', legacy);
+      const raffle = await storage.createRaffle(legacy);
+      return res.json(raffle);
     } catch (error) {
       console.error('Raffle creation error:', error);
       res.status(400).json({ 

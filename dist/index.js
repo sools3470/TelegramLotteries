@@ -134,6 +134,8 @@ var init_schema = __esm({
       // Version tracking for edits
       originalData: jsonb("original_data"),
       // Store original submission for version history
+      messageUrl: text("message_url"),
+      // لینک نهایی تایید شده توسط مدیر
       createdAt: timestamp("created_at").defaultNow(),
       updatedAt: timestamp("updated_at").defaultNow()
     });
@@ -515,19 +517,24 @@ var init_storage = __esm({
       async updateUserLevel(userId, newLevel) {
         return await this.updateUser(userId, { level: newLevel });
       }
-      async approveRaffleWithLevel(id, levelRequired, adminUserId) {
+      async approveRaffleWithLevel(id, levelRequired, adminUserId, messageUrl) {
         return await this.updateRaffle(id, {
           status: "approved",
           levelRequired,
-          reviewerId: adminUserId
+          reviewerId: adminUserId,
+          messageUrl
+          // لینک نهایی تایید شده توسط مدیر
         });
       }
-      async rejectRaffle(id, reason, restriction, adminUserId) {
+      async rejectRaffle(id, reason, restriction, adminUserId, messageUrl) {
         const updates = {
           status: "rejected",
           rejectionReason: reason,
           reviewerId: adminUserId
         };
+        if (messageUrl) {
+          updates.messageUrl = messageUrl;
+        }
         if (restriction.type !== "none") {
           const raffle = await this.getRaffle(id);
           if (raffle?.submitterId) {
@@ -1461,95 +1468,82 @@ async function registerRoutes(app2) {
   });
   app2.post("/api/raffles", async (req, res) => {
     try {
-      const isNewPayload = typeof req.body?.messageUrl === "string";
-      if (isNewPayload) {
-        const newSchema = z2.object({
-          messageUrl: z2.string().min(1),
-          submitterId: z2.string().min(1),
-          originalData: z2.any().optional()
-        });
-        const payload = newSchema.parse(req.body);
-        const allPending = await storage.getRafflesByStatus("pending");
-        const allApproved = await storage.getRafflesByStatus("approved");
-        const allRejected = await storage.getRafflesByStatus("rejected");
-        const allRaffles2 = [...allPending, ...allApproved, ...allRejected];
-        console.log("Checking for duplicates. Total raffles:", allRaffles2.length);
-        console.log("Looking for messageUrl:", payload.messageUrl);
-        console.log("All raffles originalData:", allRaffles2.map((r) => ({
-          id: r.id,
-          messageUrl: r.originalData?.messageUrl,
-          status: r.status,
-          submitterId: r.submitterId
-        })));
-        const duplicate2 = allRaffles2.find((r) => r.originalData?.messageUrl === payload.messageUrl);
-        if (duplicate2) {
-          console.log("Found duplicate:", duplicate2);
-          const isSameUser = duplicate2.submitterId === payload.submitterId;
-          const status = duplicate2.status;
-          if (status === "rejected") {
-            return res.status(400).json({
-              message: "\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0646\u0627\u0645\u0639\u062A\u0628\u0631 \u0627\u0633\u062A. \u0644\u0637\u0641\u0627 \u0641\u0642\u0637 \u0644\u06CC\u0646\u06A9 \u067E\u06CC\u0627\u0645 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0647\u0627\u06CC \u0631\u0633\u0645\u06CC \u062A\u0644\u06AF\u0631\u0627\u0645 \u0631\u0627 \u0648\u0627\u0631\u062F \u06A9\u0646\u06CC\u062F."
-            });
-          } else if (status === "approved" || status === "pending") {
-            if (isSameUser) {
-              const statusText = status === "approved" ? "\u0645\u0646\u062A\u0634\u0631 \u0634\u062F\u0647" : "\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u0628\u0631\u0631\u0633\u06CC";
-              return res.status(400).json({
-                message: `\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u062A\u06A9\u0631\u0627\u0631\u06CC\u0633\u062A \u0648 \u0642\u0628\u0644\u0627 \u062A\u0648\u0633\u0637 \u0634\u0645\u0627 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0627\u0633\u062A. \u0648\u0636\u0639\u06CC\u062A: ${statusText}`
-              });
-            } else {
-              const statusText = status === "approved" ? "\u0645\u0646\u062A\u0634\u0631 \u0634\u062F\u0647" : "\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u0628\u0631\u0631\u0633\u06CC";
-              return res.status(400).json({
-                message: `\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u062A\u06A9\u0631\u0627\u0631\u06CC\u0633\u062A \u0648 \u0642\u0628\u0644\u0627 \u062A\u0648\u0633\u0637 \u0633\u0627\u06CC\u0631 \u06A9\u0627\u0631\u0628\u0631\u0627\u0646 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0627\u0633\u062A. \u0648\u0636\u0639\u06CC\u062A: ${statusText}`
-              });
-            }
-          }
-        } else {
-          console.log("No duplicate found, proceeding with creation");
-        }
-        const legacy = {
-          channelId: "@unknown",
-          messageId: String(Date.now()),
-          forwardedMessageId: null,
-          prizeType: "stars",
-          // Default, will be set by admin
-          prizeValue: void 0,
-          // Will be set by admin
-          requiredChannels: ["TBD"],
-          // Will be set by admin
-          raffleDateTime: /* @__PURE__ */ new Date(),
-          // Use Date object instead of ISO string
-          levelRequired: 1,
-          submitterId: payload.submitterId,
-          originalData: { ...payload }
-        };
-        console.log("Creating raffle with legacy data:", legacy);
-        const raffle2 = await storage.createRaffle(legacy);
-        return res.json(raffle2);
-      }
-      const createRaffleSchema = z2.object({
-        channelId: z2.string().min(1),
-        messageId: z2.string().min(1),
-        forwardedMessageId: z2.string().nullable().optional(),
-        prizeType: z2.enum(["stars", "premium", "mixed"]),
-        prizeValue: z2.number().int().optional(),
-        requiredChannels: z2.array(z2.string()).min(0),
-        raffleDateTime: z2.coerce.date(),
-        levelRequired: z2.number().int().default(1),
+      const newSchema = z2.object({
+        messageUrl: z2.string().min(1),
         submitterId: z2.string().min(1),
         originalData: z2.any().optional()
       });
-      const raffleData = createRaffleSchema.parse(req.body);
-      const existingRaffles = await storage.getRafflesByStatus("pending");
-      const approvedRaffles = await storage.getRafflesByStatus("approved");
-      const allRaffles = [...existingRaffles, ...approvedRaffles];
-      const duplicate = allRaffles.find(
-        (r) => r.channelId === raffleData.channelId && r.messageId === raffleData.messageId
-      );
+      const payload = newSchema.parse(req.body);
+      const allPending = await storage.getRafflesByStatus("pending");
+      const allApproved = await storage.getRafflesByStatus("approved");
+      const allRejected = await storage.getRafflesByStatus("rejected");
+      console.log("Checking for duplicates. Looking for messageUrl:", payload.messageUrl);
+      const pendingRejectedRaffles = [...allPending, ...allRejected];
+      const duplicatePendingRejected = pendingRejectedRaffles.find((r) => r.originalData?.messageUrl === payload.messageUrl);
+      const duplicateApprovedByOriginal = allApproved.find((r) => r.originalData?.messageUrl === payload.messageUrl);
+      const duplicateApprovedByFinal = allApproved.find((r) => r.messageUrl === payload.messageUrl);
+      console.log("Duplicate check results:", {
+        duplicatePendingRejected: duplicatePendingRejected?.id,
+        duplicateApprovedByOriginal: duplicateApprovedByOriginal?.id,
+        duplicateApprovedByFinal: duplicateApprovedByFinal?.id,
+        totalApproved: allApproved.length,
+        totalPending: allPending.length,
+        totalRejected: allRejected.length
+      });
+      const duplicate = duplicatePendingRejected || duplicateApprovedByOriginal || duplicateApprovedByFinal;
       if (duplicate) {
-        return res.status(400).json({ message: "Raffle with this channel and message already exists" });
+        console.log("Found duplicate:", duplicate);
+        const isSameUser = duplicate.submitterId === payload.submitterId;
+        const status = duplicate.status;
+        let duplicateType = "unknown";
+        if (duplicatePendingRejected) {
+          duplicateType = "pending_rejected";
+        } else if (duplicateApprovedByOriginal) {
+          duplicateType = "approved_original";
+        } else if (duplicateApprovedByFinal) {
+          duplicateType = "approved_final";
+        }
+        if (status === "rejected") {
+          return res.status(400).json({
+            message: "\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0646\u0627\u0645\u0639\u062A\u0628\u0631 \u0627\u0633\u062A. \u0644\u0637\u0641\u0627 \u0641\u0642\u0637 \u0644\u06CC\u0646\u06A9 \u067E\u06CC\u0627\u0645 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0647\u0627\u06CC \u0631\u0633\u0645\u06CC \u062A\u0644\u06AF\u0631\u0627\u0645 \u0631\u0627 \u0648\u0627\u0631\u062F \u06A9\u0646\u06CC\u062F."
+          });
+        } else if (status === "approved" || status === "pending") {
+          if (isSameUser) {
+            const statusText = status === "approved" ? "\u0645\u0646\u062A\u0634\u0631 \u0634\u062F\u0647" : "\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u0628\u0631\u0631\u0633\u06CC";
+            const duplicateText = duplicateType === "approved_original" ? "\u0627\u06CC\u0646 \u0644\u06CC\u0646\u06A9 \u0642\u0628\u0644\u0627\u064B \u062A\u0648\u0633\u0637 \u0634\u0645\u0627 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0648 \u062A\u0627\u06CC\u06CC\u062F \u0634\u062F\u0647 \u0627\u0633\u062A" : duplicateType === "approved_final" ? "\u0627\u06CC\u0646 \u0644\u06CC\u0646\u06A9 \u0642\u0628\u0644\u0627\u064B \u062A\u0648\u0633\u0637 \u0634\u0645\u0627 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0648 \u0645\u062F\u06CC\u0631 \u0622\u0646 \u0631\u0627 \u0648\u06CC\u0631\u0627\u06CC\u0634 \u0648 \u062A\u0627\u06CC\u06CC\u062F \u06A9\u0631\u062F\u0647 \u0627\u0633\u062A" : "\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0642\u0628\u0644\u0627\u064B \u062A\u0648\u0633\u0637 \u0634\u0645\u0627 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0627\u0633\u062A";
+            return res.status(400).json({
+              message: `${duplicateText}. \u0648\u0636\u0639\u06CC\u062A: ${statusText}`
+            });
+          } else {
+            const statusText = status === "approved" ? "\u0645\u0646\u062A\u0634\u0631 \u0634\u062F\u0647" : "\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u0628\u0631\u0631\u0633\u06CC";
+            const duplicateText = duplicateType === "approved_original" ? "\u0627\u06CC\u0646 \u0644\u06CC\u0646\u06A9 \u0642\u0628\u0644\u0627\u064B \u062A\u0648\u0633\u0637 \u0633\u0627\u06CC\u0631 \u06A9\u0627\u0631\u0628\u0631\u0627\u0646 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0648 \u062A\u0627\u06CC\u06CC\u062F \u0634\u062F\u0647 \u0627\u0633\u062A" : duplicateType === "approved_final" ? "\u0627\u06CC\u0646 \u0644\u06CC\u0646\u06A9 \u0642\u0628\u0644\u0627\u064B \u062A\u0648\u0633\u0637 \u0633\u0627\u06CC\u0631 \u06A9\u0627\u0631\u0628\u0631\u0627\u0646 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0648 \u0645\u062F\u06CC\u0631 \u0622\u0646 \u0631\u0627 \u0648\u06CC\u0631\u0627\u06CC\u0634 \u0648 \u062A\u0627\u06CC\u06CC\u062F \u06A9\u0631\u062F\u0647 \u0627\u0633\u062A" : "\u0627\u06CC\u0646 \u0642\u0631\u0639\u0647\u200C\u06A9\u0634\u06CC \u0642\u0628\u0644\u0627\u064B \u062A\u0648\u0633\u0637 \u0633\u0627\u06CC\u0631 \u06A9\u0627\u0631\u0628\u0631\u0627\u0646 \u0627\u0631\u0633\u0627\u0644 \u0634\u062F\u0647 \u0627\u0633\u062A";
+            return res.status(400).json({
+              message: `${duplicateText}. \u0648\u0636\u0639\u06CC\u062A: ${statusText}`
+            });
+          }
+        }
+      } else {
+        console.log("No duplicate found, proceeding with creation");
       }
-      const raffle = await storage.createRaffle(raffleData);
-      res.json(raffle);
+      const legacy = {
+        channelId: "@unknown",
+        messageId: String(Date.now()),
+        forwardedMessageId: null,
+        prizeType: "stars",
+        // Default, will be set by admin
+        prizeValue: void 0,
+        // Will be set by admin
+        requiredChannels: ["TBD"],
+        // Will be set by admin
+        raffleDateTime: /* @__PURE__ */ new Date(),
+        // Use Date object instead of ISO string
+        levelRequired: 1,
+        submitterId: payload.submitterId,
+        originalData: { ...payload }
+      };
+      console.log("Creating raffle with legacy data:", legacy);
+      const raffle = await storage.createRaffle(legacy);
+      return res.json(raffle);
     } catch (error) {
       console.error("Raffle creation error:", error);
       res.status(400).json({
@@ -1573,12 +1567,12 @@ async function registerRoutes(app2) {
   });
   app2.patch("/api/raffles/:id/approve", async (req, res) => {
     try {
-      const { levelRequired, adminUserId, status } = req.body;
+      const { levelRequired, adminUserId, status, messageUrl } = req.body;
       const admin = await storage.getUser(adminUserId);
       if (!admin || admin.userType !== "bot_admin") {
         return res.status(403).json({ message: "Access denied" });
       }
-      const raffle = await storage.approveRaffleWithLevel(req.params.id, levelRequired, adminUserId);
+      const raffle = await storage.approveRaffleWithLevel(req.params.id, levelRequired, adminUserId, messageUrl);
       if (!raffle) {
         return res.status(404).json({ message: "Raffle not found" });
       }
@@ -1589,12 +1583,12 @@ async function registerRoutes(app2) {
   });
   app2.patch("/api/raffles/:id/reject", async (req, res) => {
     try {
-      const { adminUserId, reason, restriction } = req.body;
+      const { adminUserId, reason, restriction, messageUrl } = req.body;
       const admin = await storage.getUser(adminUserId);
       if (!admin || admin.userType !== "bot_admin") {
         return res.status(403).json({ message: "Access denied" });
       }
-      const raffle = await storage.rejectRaffle(req.params.id, reason, restriction || { type: "none" }, adminUserId);
+      const raffle = await storage.rejectRaffle(req.params.id, reason, restriction || { type: "none" }, adminUserId, messageUrl);
       if (!raffle) {
         return res.status(404).json({ message: "Raffle not found" });
       }
