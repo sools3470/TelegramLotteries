@@ -898,6 +898,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/raffles/validate", async (req, res) => {
     try {
       const messageUrl = (req.query.messageUrl as string) || "";
+      const excludeId = req.query.excludeId ? parseInt(req.query.excludeId as string) : null;
+      
       if (!messageUrl) {
         return res.json({ duplicate: false });
       }
@@ -907,7 +909,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allRejected = await storage.getRafflesByStatus("rejected");
 
       const all = [...allPending, ...allApproved, ...allRejected];
-      const duplicate = all.find(r => r.originalData?.messageUrl === messageUrl);
+      const duplicate = all.find(r => {
+        // Skip the current raffle being edited (excludeId)
+        if (excludeId && r.id === excludeId) {
+          return false;
+        }
+        return r.originalData?.messageUrl === messageUrl;
+      });
 
       if (!duplicate) {
         return res.json({ duplicate: false });
