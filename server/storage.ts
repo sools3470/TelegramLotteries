@@ -312,11 +312,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveRaffleWithLevel(id: string, levelRequired: number, adminUserId: string, messageUrl?: string): Promise<Raffle | undefined> {
+    // Fallback: اگر messageUrl ارسال نشد، از لینک اصلی کاربر استفاده کن
+    if (!messageUrl) {
+      const current = await this.getRaffle(id);
+      const originalUrl = (current as any)?.originalData?.messageUrl as string | undefined;
+      if (originalUrl && typeof originalUrl === 'string') {
+        messageUrl = originalUrl;
+      }
+    }
     return await this.updateRaffle(id, { 
       status: "approved" as any, 
       levelRequired,
       reviewerId: adminUserId,
-      messageUrl: messageUrl // لینک نهایی تایید شده توسط مدیر
+      messageUrl: messageUrl
     });
   }
 
