@@ -106,14 +106,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Duplicate detection: ONLY check approved raffles by final messageUrl
+        // Duplicate detection:
+        // - pending/rejected: based on original URL (originalData.messageUrl)
+        // - approved: based on final URL (messageUrl)
+        const allPending = await storage.getRafflesByStatus("pending");
         const allApproved = await storage.getRafflesByStatus("approved");
-        console.log('Checking for duplicates (approved only). Looking for messageUrl:', payload.messageUrl);
-        const duplicate = allApproved.find(r => r.messageUrl === payload.messageUrl);
+        const allRejected = await storage.getRafflesByStatus("rejected");
+        
+        console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
+        
+        // pending/rejected by original URL
+        const pendingRejectedRaffles = [...allPending, ...allRejected];
+        const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
+        
+        // approved by final URL only
+        const duplicateApprovedFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
+        
+        const duplicate = duplicatePendingRejected || duplicateApprovedFinal;
+        
         if (duplicate) {
           const isSameUser = duplicate.submitterId === payload.submitterId;
           const status = duplicate.status;
-          if (status === "approved" || status === "pending") {
+          if (status === "rejected") {
+            return res.status(400).json({ 
+              message: "این قرعه‌کشی نامعتبر است. لطفا فقط لینک پیام قرعه‌کشی های رسمی تلگرام را وارد کنید." 
+            });
+          } else if (status === "approved" || status === "pending") {
             if (isSameUser) {
               const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
               return res.status(400).json({ 
@@ -127,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         } else {
-          console.log('No duplicate found in approved raffles, proceeding with creation');
+          console.log('No duplicate found, proceeding with creation');
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids
