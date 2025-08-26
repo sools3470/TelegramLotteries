@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -416,11 +416,51 @@ export default function AdminPanelEnhanced() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'approve' | 'reject' | null>(null);
   const [editedMessageLink, setEditedMessageLink] = useState<string>("");
+  const [isCheckingLink, setIsCheckingLink] = useState(false);
+  const [linkDuplicateError, setLinkDuplicateError] = useState<string>("");
+  const [isApproveBlocked, setIsApproveBlocked] = useState(false);
 
+  // Debounced validation for edited message link (instant duplicate check)
+  useEffect(() => {
+    // فقط زمانی که دیالوگ باز است بررسی انجام شود
+    if (!showReviewDialog) return;
+    const url = (editedMessageLink || "").trim();
+    // اگر خالی است، خطا پاک و مسدودیت تأیید برداشته شود
+    if (!url) {
+      setLinkDuplicateError("");
+      setIsApproveBlocked(false);
+      return;
+    }
 
+    setIsCheckingLink(true);
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const resp = await fetch(`/api/raffles/validate?messageUrl=${encodeURIComponent(url)}`, { signal: controller.signal });
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({} as any));
+          setLinkDuplicateError(typeof data?.message === 'string' ? data.message : 'لینک تکراری است');
+          setIsApproveBlocked(true);
+        } else {
+          setLinkDuplicateError("");
+          setIsApproveBlocked(false);
+        }
+      } catch (e: any) {
+        if (e?.name !== 'AbortError') {
+          // در خطاهای شبکه، مانع تأیید نشویم و پیام خطا نشان ندهیم
+          setLinkDuplicateError("");
+          setIsApproveBlocked(false);
+        }
+      } finally {
+        setIsCheckingLink(false);
+      }
+    }, 400);
 
-
-
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [editedMessageLink, showReviewDialog]);
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
@@ -1536,6 +1576,12 @@ export default function AdminPanelEnhanced() {
                       placeholder="لینک پیام قرعه‌کشی..."
                       className="w-full"
                     />
+                    {isCheckingLink && (
+                      <div className="text-xs text-telegram-hint">در حال بررسی لینک...</div>
+                    )}
+                    {linkDuplicateError && (
+                      <div className="text-xs text-red-500">{linkDuplicateError}</div>
+                    )}
                     {(selectedRaffle?.messageUrl || selectedRaffle?.originalData?.messageUrl) && (
                       <div className="mt-2">
                         <Button
@@ -1710,7 +1756,7 @@ export default function AdminPanelEnhanced() {
                   {selectedAction === 'approve' && (
                     <Button
                       onClick={levelApprovalForm.handleSubmit(onLevelApprovalSubmit)}
-                      disabled={approveRaffleMutation.isPending}
+                      disabled={approveRaffleMutation.isPending || isApproveBlocked}
                       className="flex-1 bg-green-500 hover:bg-green-600 text-white"
                     >
                       {approveRaffleMutation.isPending ? (
