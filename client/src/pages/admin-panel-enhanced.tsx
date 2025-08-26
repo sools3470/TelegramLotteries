@@ -423,16 +423,14 @@ export default function AdminPanelEnhanced() {
 
   // Debounced validation for edited message link (instant duplicate check)
   useEffect(() => {
-    // فقط زمانی که دیالوگ باز است بررسی انجام شود
+    // فقط زمانی که دیالوگ باز است و کاربر ویرایش کرده بررسی انجام شود
     if (!showReviewDialog || !hasEditedLink) return;
     const url = (editedMessageLink || "").trim();
-    // اگر خالی است، خطا پاک و مسدودیت تأیید برداشته شود
     if (!url) {
       setLinkDuplicateError("");
       setIsApproveBlocked(false);
       return;
     }
-
     setIsCheckingLink(true);
     const controller = new AbortController();
     const timer = setTimeout(async () => {
@@ -448,7 +446,6 @@ export default function AdminPanelEnhanced() {
         }
       } catch (e: any) {
         if (e?.name !== 'AbortError') {
-          // در خطاهای شبکه، مانع تأیید نشویم و پیام خطا نشان ندهیم
           setLinkDuplicateError("");
           setIsApproveBlocked(false);
         }
@@ -456,12 +453,29 @@ export default function AdminPanelEnhanced() {
         setIsCheckingLink(false);
       }
     }, 400);
-
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
+    return () => { clearTimeout(timer); controller.abort(); };
   }, [editedMessageLink, showReviewDialog, hasEditedLink]);
+
+  // ریست ولیدیشن هنگام تغییر آگهی انتخاب‌شده
+  useEffect(() => {
+    if (!selectedRaffle) return;
+    setHasEditedLink(false);
+    setIsApproveBlocked(false);
+    setLinkDuplicateError("");
+    setIsCheckingLink(false);
+    // ورودی را به حالت وابسته به مقادیر آگهی برگردانیم (نمایش از selectedRaffle)
+    setEditedMessageLink("");
+  }, [selectedRaffle]);
+
+  // ریست ولیدیشن هنگام باز شدن دیالوگ بررسی
+  useEffect(() => {
+    if (!showReviewDialog) return;
+    setHasEditedLink(false);
+    setIsApproveBlocked(false);
+    setLinkDuplicateError("");
+    setIsCheckingLink(false);
+    setEditedMessageLink("");
+  }, [showReviewDialog]);
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
