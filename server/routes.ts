@@ -106,23 +106,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const payload = newSchema.parse(req.body);
 
-        // Duplicate detection:
-        // - pending/rejected: based on original URL (originalData.messageUrl)
-        // - approved: based on final URL (messageUrl)
+        // Duplicate detection: compare ONLY against originalData.messageUrl across all statuses
         const allPending = await storage.getRafflesByStatus("pending");
         const allApproved = await storage.getRafflesByStatus("approved");
         const allRejected = await storage.getRafflesByStatus("rejected");
         
-        console.log('Checking for duplicates. Looking for messageUrl:', payload.messageUrl);
+        console.log('Checking for duplicates (originalData.messageUrl only):', payload.messageUrl);
         
-        // pending/rejected by original URL
-        const pendingRejectedRaffles = [...allPending, ...allRejected];
-        const duplicatePendingRejected = pendingRejectedRaffles.find(r => r.originalData?.messageUrl === payload.messageUrl);
-        
-        // approved by final URL only
-        const duplicateApprovedFinal = allApproved.find(r => r.messageUrl === payload.messageUrl);
-        
-        const duplicate = duplicatePendingRejected || duplicateApprovedFinal;
+        const all = [...allPending, ...allApproved, ...allRejected];
+        const duplicate = all.find(r => r.originalData?.messageUrl === payload.messageUrl);
         
         if (duplicate) {
           const isSameUser = duplicate.submitterId === payload.submitterId;
@@ -145,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         } else {
-          console.log('No duplicate found, proceeding with creation');
+          console.log('No duplicate found by originalData.messageUrl, proceeding with creation');
         }
 
         // Map to legacy required fields: synthesize placeholders + dummy ids
