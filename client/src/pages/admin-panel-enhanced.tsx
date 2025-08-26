@@ -422,10 +422,17 @@ export default function AdminPanelEnhanced() {
 
   // Validation for message link (instant duplicate check)
   useEffect(() => {
-    // اجرا به صورت پیش‌فرض وقتی دیالوگ باز است
+    // فقط زمانی که دیالوگ باز است و کاربر لینک را تغییر داده بررسی انجام شود
     if (!showReviewDialog) return;
     
-    const url = (editedMessageLink || selectedRaffle?.originalData?.messageUrl || "").trim();
+    // اگر لینک ویرایش نشده، validation انجام نده
+    if (!editedMessageLink || editedMessageLink === selectedRaffle?.originalData?.messageUrl) {
+      setLinkDuplicateError("");
+      setIsApproveBlocked(false);
+      return;
+    }
+    
+    const url = editedMessageLink.trim();
     if (!url) {
       setLinkDuplicateError("");
       setIsApproveBlocked(false);
