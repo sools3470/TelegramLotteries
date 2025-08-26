@@ -419,11 +419,12 @@ export default function AdminPanelEnhanced() {
   const [isCheckingLink, setIsCheckingLink] = useState(false);
   const [linkDuplicateError, setLinkDuplicateError] = useState<string>("");
   const [isApproveBlocked, setIsApproveBlocked] = useState(false);
+  const [hasEditedLink, setHasEditedLink] = useState(false);
 
   // Debounced validation for edited message link (instant duplicate check)
   useEffect(() => {
     // فقط زمانی که دیالوگ باز است بررسی انجام شود
-    if (!showReviewDialog) return;
+    if (!showReviewDialog || !hasEditedLink) return;
     const url = (editedMessageLink || "").trim();
     // اگر خالی است، خطا پاک و مسدودیت تأیید برداشته شود
     if (!url) {
@@ -460,7 +461,7 @@ export default function AdminPanelEnhanced() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [editedMessageLink, showReviewDialog]);
+  }, [editedMessageLink, showReviewDialog, hasEditedLink]);
 
   // Forms
   const levelApprovalForm = useForm<LevelApprovalData>({
@@ -832,11 +833,21 @@ export default function AdminPanelEnhanced() {
   const handleApproveRaffle = (raffle: any) => {
     setSelectedRaffle(raffle);
     setIsApprovalDialogOpen(true);
+    // ریست وضعیت ولیدیشن لحظه‌ای
+    setHasEditedLink(false);
+    setIsApproveBlocked(false);
+    setLinkDuplicateError("");
+    setIsCheckingLink(false);
   };
 
   const handleRejectRaffle = (raffle: any) => {
     setSelectedRaffle(raffle);
     setIsRejectDialogOpen(true);
+    // ریست وضعیت ولیدیشن لحظه‌ای
+    setHasEditedLink(false);
+    setIsApproveBlocked(false);
+    setLinkDuplicateError("");
+    setIsCheckingLink(false);
   };
 
   const onLevelApprovalSubmit = (data: LevelApprovalData) => {
@@ -1572,14 +1583,14 @@ export default function AdminPanelEnhanced() {
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">لینک پیام قرعه‌کشی:</label>
                     <Input
                       value={editedMessageLink || selectedRaffle?.messageUrl || selectedRaffle?.originalData?.messageUrl || ""}
-                      onChange={(e) => setEditedMessageLink(e.target.value)}
+                      onChange={(e) => { setEditedMessageLink(e.target.value); setHasEditedLink(true); }}
                       placeholder="لینک پیام قرعه‌کشی..."
                       className="w-full"
                     />
-                    {isCheckingLink && (
+                    {hasEditedLink && isCheckingLink && (
                       <div className="text-xs text-telegram-hint">در حال بررسی لینک...</div>
                     )}
-                    {linkDuplicateError && (
+                    {hasEditedLink && linkDuplicateError && (
                       <div className="text-xs text-red-500">{linkDuplicateError}</div>
                     )}
                     {(selectedRaffle?.messageUrl || selectedRaffle?.originalData?.messageUrl) && (
@@ -1748,6 +1759,10 @@ export default function AdminPanelEnhanced() {
                       setShowReviewDialog(false);
                       setSelectedAction(null);
                       setEditedMessageLink("");
+                      setHasEditedLink(false);
+                      setIsApproveBlocked(false);
+                      setLinkDuplicateError("");
+                      setIsCheckingLink(false);
                     }}
                     className="flex-1"
                   >
@@ -1756,7 +1771,7 @@ export default function AdminPanelEnhanced() {
                   {selectedAction === 'approve' && (
                     <Button
                       onClick={levelApprovalForm.handleSubmit(onLevelApprovalSubmit)}
-                      disabled={approveRaffleMutation.isPending || isApproveBlocked}
+                      disabled={approveRaffleMutation.isPending || (hasEditedLink && isApproveBlocked)}
                       className="flex-1 bg-green-500 hover:bg-green-600 text-white"
                     >
                       {approveRaffleMutation.isPending ? (
