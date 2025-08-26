@@ -894,6 +894,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Validate raffle link (duplicate check without creating)
+  app.get("/api/raffles/validate", async (req, res) => {
+    try {
+      const messageUrl = (req.query.messageUrl as string) || "";
+      if (!messageUrl) {
+        return res.json({ duplicate: false });
+      }
+
+      const allPending = await storage.getRafflesByStatus("pending");
+      const allApproved = await storage.getRafflesByStatus("approved");
+      const allRejected = await storage.getRafflesByStatus("rejected");
+
+      const all = [...allPending, ...allApproved, ...allRejected];
+      const duplicate = all.find(r => r.originalData?.messageUrl === messageUrl);
+
+      if (!duplicate) {
+        return res.json({ duplicate: false });
+      }
+
+      const status = duplicate.status;
+      if (status === "rejected") {
+        return res.status(400).json({
+          duplicate: true,
+          status,
+          message: "این قرعه‌کشی نامعتبر است. لطفا فقط لینک پیام قرعه‌کشی های رسمی تلگرام را وارد کنید."
+        });
+      } else if (status === "approved" || status === "pending") {
+        const statusText = status === "approved" ? "منتشر شده" : "در انتظار بررسی";
+        return res.status(400).json({
+          duplicate: true,
+          status,
+          message: `این قرعه‌کشی تکراریست و قبلا توسط سایر کاربران ارسال شده است. وضعیت: ${statusText}`
+        });
+      }
+
+      return res.json({ duplicate: true, status });
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
