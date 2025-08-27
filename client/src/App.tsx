@@ -9,15 +9,8 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { TelegramProvider } from "@/hooks/use-telegram";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { AuthScreen } from "@/components/auth-screen";
-import Home from "@/pages/home";
-import Raffles from "@/pages/raffles";
 import Profile from "@/pages/profile";
-import Admin from "@/pages/admin";
-import BotAdminPage from "@/pages/bot-admin";
-import UserMainPage from "@/pages/user-main";
-import EnhancedUserMainPage from "@/pages/enhanced-user-main";
 import UserTabsMainPage from "@/pages/user-tabs-main";
-import AdminPanel from "@/pages/admin-panel";
 import AdminPanelEnhanced from "@/pages/admin-panel-enhanced";
 
 import NotFound from "@/pages/not-found";
@@ -50,22 +43,15 @@ function Router() {
       <Header />
       <main className={`main-content ${transitionClass}`}>
         <Switch>
-          {userRole === "bot_admin" && adminLevel === 1 ? (
-            // Level 1 admin - Full admin panel
-            <>
-              <Route path="/" component={AdminPanelEnhanced} />
-              <Route path="/admin" component={AdminPanelEnhanced} />
-              <Route path="/profile" component={Profile} />
-            </>
-          ) : userRole === "bot_admin" && adminLevel === 2 ? (
-            // Level 2 admin - Same admin panel but with restricted tabs
+          {userRole === "bot_admin" ? (
+            // All admin levels (0, 1, 2) - Admin panel
             <>
               <Route path="/" component={AdminPanelEnhanced} />
               <Route path="/admin" component={AdminPanelEnhanced} />
               <Route path="/profile" component={Profile} />
             </>
           ) : (
-            // Regular users (including raffle submission capabilities)
+            // Regular users
             <>
               <Route path="/" component={UserTabsMainPage} />
               <Route path="/raffles" component={UserTabsMainPage} />

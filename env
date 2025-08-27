@@ -1,0 +1,2 @@
+ADMIN_TELEGRAM_IDS=128787773,7159783954
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/raffle_db

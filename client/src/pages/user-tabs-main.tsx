@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,22 +46,19 @@ import {
   Calendar as CalendarIcon,
   MapPin,
   MessageCircle,
-  Settings
+  Settings,
+  ArrowUp
 } from "lucide-react";
 
 import { format } from "date-fns";
 
 // Form schema for raffle submission
 const raffleFormSchema = z.object({
-  title: z.string().min(3, "عنوان باید حداقل ۳ کاراکتر باشد"),
-  prizeType: z.enum(["stars", "premium", "mixed"], {
-    required_error: "نوع جایزه را انتخاب کنید"
-  }),
-  prizeValue: z.number().min(1, "مقدار جایزه باید مثبت باشد").optional(),
-  requiredChannels: z.string().min(1, "حداقل یک کانال الزامی است"),
-  raffleDateTime: z.string().min(1, "تاریخ و زمان الزامی است"),
-  channelId: z.string().min(1, "شناسه کانال الزامی است"),
-  messageId: z.string().min(1, "شناسه پیام الزامی است"),
+  messageUrl: z.string()
+    .min(1, "لینک پیام قرعه‌کشی الزامی است")
+    .refine((url) => url.startsWith('https://t.me/'), {
+      message: "لینک باید با https://t.me/ شروع شود"
+    }),
 });
 
 type RaffleFormData = z.infer<typeof raffleFormSchema>;
@@ -73,17 +70,82 @@ export default function UserTabsMainPage() {
   const [activeTab, setActiveTab] = useState("participate"); // Default to participate tab
   const [submissionFilter, setSubmissionFilter] = useState<string>("all"); // For submitted raffles status filter
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [showSupportButton, setShowSupportButton] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    try {
+      // Find the main scrollable container - check multiple selectors for admin users
+      const mainContainer = document.querySelector('.tab-content-enter') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.main-content') ||
+                           document.querySelector('.app-container');
+      if (mainContainer) {
+        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to window scroll
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error('Scroll to top error:', error);
+    }
+  };
+
+  // Scroll event handler
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check scroll on multiple containers for admin users
+      const mainContainer = document.querySelector('.tab-content-enter') || 
+                           document.querySelector('[data-radix-tabs-content]') ||
+                           document.querySelector('.main-content') ||
+                           document.querySelector('.app-container');
+      let scrollY = 0;
+      
+      if (mainContainer) {
+        scrollY = mainContainer.scrollTop;
+      } else {
+        scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+      }
+      
+      const scrollThreshold = 1;
+      const shouldShow = scrollY > scrollThreshold;
+      
+      console.log('User scroll debug:', {
+        userType: user?.userType,
+        adminLevel: user?.adminLevel,
+        mainContainer: !!mainContainer,
+        scrollY,
+        scrollThreshold,
+        shouldShow,
+        currentShowState: showScrollToTop
+      });
+      
+      setShowSupportButton(shouldShow);
+      setShowScrollToTop(shouldShow);
+    };
+
+    // Add scroll listener to multiple containers
+    const mainContainer = document.querySelector('.tab-content-enter') || 
+                         document.querySelector('[data-radix-tabs-content]') ||
+                         document.querySelector('.main-content') ||
+                         document.querySelector('.app-container');
+    if (mainContainer) {
+      mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('User: Added scroll listener to main container');
+      return () => mainContainer.removeEventListener('scroll', handleScroll);
+    } else {
+      // Fallback to document scroll
+      document.addEventListener('scroll', handleScroll, { passive: true });
+      console.log('User: Added scroll listener to document');
+      return () => document.removeEventListener('scroll', handleScroll);
+    }
+  }, [user?.userType, user?.adminLevel, showScrollToTop]);
 
   const form = useForm<RaffleFormData>({
     resolver: zodResolver(raffleFormSchema),
     defaultValues: {
-      title: "",
-      prizeType: "stars",
-      prizeValue: 0,
-      requiredChannels: "",
-      raffleDateTime: "",
-      channelId: "",
-      messageId: "",
+      messageUrl: "",
     },
   });
 
@@ -96,6 +158,8 @@ export default function UserTabsMainPage() {
       return await response.json();
     },
     enabled: !!user?.id,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true,
   });
 
   const { data: raffles = [], isLoading: rafflesLoading } = useQuery({
@@ -110,35 +174,42 @@ export default function UserTabsMainPage() {
       return await response.json();
     },
     enabled: !!user?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchIntervalInBackground: true,
   });
 
   const { data: seenRaffles = [] } = useQuery({
     queryKey: ['/api/user/seen-raffles', user?.id],
     enabled: !!user?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchIntervalInBackground: true,
   }) as { data: string[] };
 
   const { data: joinedRaffles = [] } = useQuery({
     queryKey: ['/api/user/joined-raffles', user?.id],
     enabled: !!user?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchIntervalInBackground: true,
   }) as { data: string[] };
 
   const { data: sponsorChannels = [] } = useQuery({
     queryKey: ['/api/sponsor-channels'],
     enabled: !!user?.id,
+    refetchInterval: 10000, // Refetch every 10 seconds (less frequent for static data)
+    refetchIntervalInBackground: true,
   }) as { data: any[] };
 
   const { data: submittedRaffles = [] } = useQuery({
-    queryKey: ['/api/raffles/submitted', user?.id, submissionFilter],
+    queryKey: ['/api/raffles/submitted', user?.id],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (user?.id) params.append('submitterId', user.id);
-      if (submissionFilter && submissionFilter !== 'all') params.append('status', submissionFilter);
-      
-      const response = await fetch(`/api/raffles/submitted?${params.toString()}`);
+      if (!user?.id) return [];
+      const response = await fetch(`/api/raffles/submitted/${user.id}`);
       if (!response.ok) throw new Error('Failed to fetch submitted raffles');
       return await response.json();
     },
     enabled: !!user?.id && activeTab === 'submit',
+    refetchInterval: 3000, // Refetch every 3 seconds for submitted raffles (more frequent)
+    refetchIntervalInBackground: true,
   });
 
   // Generate unique referral link
@@ -187,10 +258,9 @@ export default function UserTabsMainPage() {
   const submitRaffleMutation = useMutation({
     mutationFn: async (data: RaffleFormData) => {
       const requestData = {
-        ...data,
-        requiredChannels: data.requiredChannels.split(',').map(ch => ch.trim()),
+        messageUrl: data.messageUrl,
         submitterId: user?.id,
-        raffleDateTime: new Date(data.raffleDateTime).toISOString(),
+        originalData: data,
       };
 
       const response = await fetch('/api/raffles', {
@@ -199,15 +269,51 @@ export default function UserTabsMainPage() {
         body: JSON.stringify(requestData),
       });
 
-      if (!response.ok) throw new Error('Failed to submit raffle');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Raffle submission error:', errorData);
+        
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
       return await response.json();
     },
     onSuccess: () => {
       toast({ title: "قرعه‌کشی با موفقیت ارسال شد و در انتظار تایید است" });
       form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/raffles/submitted'] });
     },
-    onError: () => {
-      toast({ title: "خطا در ارسال قرعه‌کشی", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Raffle submission error:', error);
+      
+      // Check if error message contains status information
+      if (error.message && error.message.includes('وضعیت:')) {
+        const statusMatch = error.message.match(/وضعیت:\s*(.+)$/);
+        if (statusMatch) {
+          const status = statusMatch[1].trim();
+          const isApproved = status === 'منتشر شده';
+          const isPending = status === 'در انتظار بررسی';
+          
+          // Create base message without status
+          const baseMessage = error.message.replace(/وضعیت:\s*.+$/, '').trim();
+          
+          // Use emoji for status color
+          const statusEmoji = isApproved ? '🟢' : isPending ? '🟡' : '⚪';
+          
+          toast({ 
+            title: baseMessage,
+            description: `وضعیت: ${statusEmoji} ${status}`,
+            variant: "destructive",
+            duration: 5000
+          });
+          return;
+        }
+      }
+      
+      toast({ 
+        title: "خطا در ارسال قرعه‌کشی", 
+        description: error.message || "خطای نامشخص رخ داده است",
+        variant: "destructive" 
+      });
     },
   });
 
@@ -307,21 +413,21 @@ export default function UserTabsMainPage() {
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="tabs-list-responsive mb-6">
-            <TabsTrigger value="profile" className="tabs-trigger-responsive">
-              <UserIcon size={16} />
-              <span>پروفایل</span>
-            </TabsTrigger>
-            <TabsTrigger value="points" className="tabs-trigger-responsive">
-              <Star size={16} />
-              <span>امتیازات</span>
-            </TabsTrigger>
             <TabsTrigger value="participate" className="tabs-trigger-responsive">
               <Trophy size={16} />
               <span>شرکت</span>
             </TabsTrigger>
             <TabsTrigger value="submit" className="tabs-trigger-responsive">
               <Plus size={16} />
-              <span>ثبت جدید</span>
+              <span>ثبت قرعه کشی</span>
+            </TabsTrigger>
+            <TabsTrigger value="points" className="tabs-trigger-responsive">
+              <Star size={16} />
+              <span>امتیازات</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="tabs-trigger-responsive">
+              <UserIcon size={16} />
+              <span>پروفایل</span>
             </TabsTrigger>
           </TabsList>
 
@@ -646,7 +752,7 @@ export default function UserTabsMainPage() {
             {/* Submission Filter Tabs */}
             <Tabs value={submissionFilter} onValueChange={setSubmissionFilter} className="w-full">
               <TabsList className="filter-tabs-responsive mb-4">
-                <TabsTrigger value="all" className="text-xs">همه</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs">ثبت جدید</TabsTrigger>
                 <TabsTrigger value="pending" className="text-xs">در انتظار</TabsTrigger>
                 <TabsTrigger value="approved" className="text-xs">تایید شده</TabsTrigger>
                 <TabsTrigger value="rejected" className="text-xs">رد شده</TabsTrigger>
@@ -666,116 +772,12 @@ export default function UserTabsMainPage() {
                   <form onSubmit={form.handleSubmit(handleSubmitRaffle)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="title"
+                      name="messageUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>عنوان قرعه‌کشی</FormLabel>
+                          <FormLabel>لینک پیام قرعه‌کشی (از کانال برگزارکننده)</FormLabel>
                           <FormControl>
-                            <Input placeholder="عنوان قرعه‌کشی را وارد کنید" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-
-
-                    <div className="responsive-grid">
-                      <FormField
-                        control={form.control}
-                        name="prizeType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>نوع جایزه</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="نوع جایزه را انتخاب کنید" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="stars">ستاره</SelectItem>
-                                <SelectItem value="premium">پریمیوم</SelectItem>
-                                <SelectItem value="mixed">ترکیبی</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="prizeValue"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>مقدار جایزه</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="100" 
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="requiredChannels"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>کانال‌های مورد نیاز</FormLabel>
-                          <FormControl>
-                            <Input placeholder="@channel1, @channel2" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="responsive-grid">
-                      <FormField
-                        control={form.control}
-                        name="channelId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>شناسه کانال</FormLabel>
-                            <FormControl>
-                              <Input placeholder="-1001234567890" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="messageId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>شناسه پیام</FormLabel>
-                            <FormControl>
-                              <Input placeholder="123" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="raffleDateTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>تاریخ و زمان قرعه‌کشی</FormLabel>
-                          <FormControl>
-                            <Input type="datetime-local" {...field} />
+                            <Input placeholder="https://t.me/channel/12345" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -807,7 +809,17 @@ export default function UserTabsMainPage() {
                         {submissionFilter === "approved" && "قرعه‌کشی‌های تایید شده"}
                         {submissionFilter === "rejected" && "قرعه‌کشی‌های رد شده"}
                         <Badge variant="outline" className="ml-auto">
-                          {submittedRaffles.length} مورد
+                          {(() => {
+                            const list = submittedRaffles as any[];
+                            const count = submissionFilter === 'pending'
+                              ? list.filter(r => r.status === 'pending').length
+                              : submissionFilter === 'approved'
+                                ? list.filter(r => r.status === 'approved').length
+                                : submissionFilter === 'rejected'
+                                  ? list.filter(r => r.status === 'rejected').length
+                                  : list.length;
+                            return count;
+                          })()} مورد
                         </Badge>
                       </div>
                     </CardContent>
@@ -815,7 +827,14 @@ export default function UserTabsMainPage() {
 
                   {/* Submitted Raffles List */}
                   <div className="space-y-4">
-                    {submittedRaffles.map((raffle: any, index: number) => (
+                    {(submittedRaffles as any[])
+                      .filter((raffle: any) => {
+                        if (submissionFilter === 'pending') return raffle.status === 'pending';
+                        if (submissionFilter === 'approved') return raffle.status === 'approved';
+                        if (submissionFilter === 'rejected') return raffle.status === 'rejected';
+                        return true;
+                      })
+                      .map((raffle: any, index: number) => (
                       <Card 
                         key={raffle.id} 
                         className="shadow-telegram-lg hover:shadow-telegram-xl transition-all duration-300 animate-fade-in"
@@ -922,7 +941,7 @@ export default function UserTabsMainPage() {
         </Tabs>
         
         {/* Enhanced Floating Support Button - only for non-admin users */}
-        {user?.userType !== "bot_admin" && (
+        {user?.userType !== "bot_admin" && showSupportButton && (
           <div 
             className="fixed bottom-20 left-4 z-50 animate-slideUp"
             style={{ opacity: 1, transform: "translateY(0)" }}
@@ -938,6 +957,36 @@ export default function UserTabsMainPage() {
             </button>
           </div>
         )}
+
+        {/* Scroll to Top Button - for all users */}
+        {showScrollToTop && (
+          <div 
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]"
+            style={{ pointerEvents: "auto" }}
+          >
+            <Button
+              onClick={scrollToTop}
+              className="flex items-center justify-center bg-gradient-to-r from-telegram-blue to-telegram-blue-dark hover:from-telegram-blue-dark hover:to-telegram-blue text-white w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer border-0"
+              title="برو بالا"
+              aria-label="برو بالا"
+              style={{ pointerEvents: "auto" }}
+            >
+              <ArrowUp size={20} className="text-white" />
+            </Button>
+          </div>
+        )}
+
+        {/* Debug Panel - for admin users */}
+        {user?.userType === "bot_admin" && (
+          <div className="fixed top-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs z-[9999]">
+            <div>showScrollToTop: {showScrollToTop.toString()}</div>
+            <div>userType: {user?.userType}</div>
+            <div>adminLevel: {user?.adminLevel}</div>
+            <div>activeTab: {activeTab}</div>
+          </div>
+        )}
+
+
     </div>
   );
 }

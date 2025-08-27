@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTelegram } from "./use-telegram";
 import { apiRequest } from "@/lib/queryClient";
@@ -21,9 +21,20 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user: telegramUser, isInTelegram } = useTelegram();
+  const { user: telegramUser, isInTelegram, isLoading: telegramLoading } = useTelegram();
   const [authMethod, setAuthMethod] = useState<"telegram" | "gmail" | "guest" | null>(null);
+  const didAutoLoginRef = useRef(false);
   const queryClient = useQueryClient();
+  const storedEmail = typeof window !== 'undefined'
+    ? (() => {
+        try {
+          const raw = localStorage.getItem('authUser');
+          return raw ? JSON.parse(raw)?.email || null : null;
+        } catch {
+          return null;
+        }
+      })()
+    : null;
   
   // Check if user exists in database
   const { data: user, isLoading, refetch } = useQuery({
@@ -58,14 +69,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return null;
     },
     retry: false,
+    enabled: Boolean(telegramUser?.id || storedEmail || !isInTelegram),
   });
 
-  // Auto-login with Telegram if available
+  // Auto-login with Telegram as soon as Telegram user arrives
   useEffect(() => {
-    if (telegramUser && !user && !isLoading) {
+    if (isInTelegram && telegramUser && !didAutoLoginRef.current) {
+      didAutoLoginRef.current = true;
       loginWithTelegram();
     }
-  }, [telegramUser, user, isLoading]);
+  }, [isInTelegram, telegramUser]);
 
   // Determine auth method
   useEffect(() => {
@@ -84,11 +97,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: `telegram_${telegramUser.id}`,
           telegramId: telegramUser.id.toString(),
           firstName: telegramUser.first_name,
           lastName: telegramUser.last_name || "",
-          username: telegramUser.username,
           profileImageUrl: undefined, // Not available in telegram user type
         }),
       });
@@ -116,7 +127,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: `gmail_${email}`,
           email,
           firstName,
           lastName,
@@ -158,7 +168,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     <AuthContext.Provider
       value={{
         user,
-        isLoading: isLoading || telegramLoginMutation.isPending || gmailLoginMutation.isPending,
+        isLoading: (telegramLoading || isLoading || telegramLoginMutation.isPending || gmailLoginMutation.isPending),
         isAuthenticated: !!user,
         loginWithTelegram,
         loginWithGmail,

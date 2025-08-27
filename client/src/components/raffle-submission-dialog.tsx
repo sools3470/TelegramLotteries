@@ -46,7 +46,7 @@ export function RaffleSubmissionDialog({ open, onOpenChange }: RaffleSubmissionD
       messageId: "",
       title: "",
       prizeType: "stars",
-      prizeValue: 0,
+      prizeValue: undefined,
       requiredChannels: "",
       raffleDateTime: "",
     }
@@ -59,9 +59,18 @@ export function RaffleSubmissionDialog({ open, onOpenChange }: RaffleSubmissionD
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...data,
-          submitterId: user?.id,
-          status: 'pending'
+          channelId: data.channelId,
+          messageId: data.messageId,
+          title: data.title,
+          prizeType: data.prizeType,
+          prizeValue: typeof data.prizeValue === 'number' ? data.prizeValue : undefined,
+          requiredChannels: (data.requiredChannels || '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean),
+          raffleDateTime: data.raffleDateTime,
+          levelRequired: 1,
+          submitterId: user?.id || 'unknown'
         })
       });
       
@@ -200,11 +209,22 @@ export function RaffleSubmissionDialog({ open, onOpenChange }: RaffleSubmissionD
                     <FormLabel>مقدار جایزه</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
-                        type="number"
-                        min="1"
-                        placeholder="مثال: 100 Stars"
-                        onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value ?? ''}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9۰-۹٠-٩]*"
+                        placeholder="مثال: 100"
+                        onChange={e => {
+                          const raw = e.target.value;
+                          // Convert Persian/Arabic-Indic digits to ASCII
+                          const normalized = raw
+                            .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0))
+                            .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+                            .replace(/[^0-9]/g, '');
+                          field.onChange(normalized === '' ? undefined : Number(normalized));
+                        }}
                       />
                     </FormControl>
                     <FormMessage />

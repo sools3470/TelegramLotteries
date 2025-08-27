@@ -236,7 +236,8 @@ function RafflesList({
   onBulkDelete,
   adminLevel,
   setSelectedRaffle,
-  setShowReviewDialog
+  setShowReviewDialog,
+  setEditedMessageLink
 }: { 
   status: string,
   onApprove?: (raffle: any) => void,
@@ -245,7 +246,8 @@ function RafflesList({
   onBulkDelete?: () => void,
   adminLevel?: number | null,
   setSelectedRaffle?: (raffle: any) => void,
-  setShowReviewDialog?: (show: boolean) => void
+  setShowReviewDialog?: (show: boolean) => void,
+  setEditedMessageLink?: (link: string) => void
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -357,7 +359,14 @@ function RafflesList({
                         size="sm"
                         className="bg-blue-500 hover:bg-blue-600 text-white"
                         onClick={() => {
+                          console.log('Selected raffle data:', raffle);
+                          console.log('Submitter data:', raffle.submitter);
+                          console.log('Message link:', raffle.messageUrl);
+                          console.log('MessageUrl field:', raffle.messageUrl);
+                          console.log('TelegramMessageUrl field:', raffle.telegramMessageUrl);
+                          console.log('Original data:', raffle.originalData);
                           setSelectedRaffle?.(raffle);
+                          setEditedMessageLink(raffle.messageUrl || raffle.originalData?.messageUrl || "");
                           setShowReviewDialog?.(true);
                         }}
                       >
@@ -391,17 +400,26 @@ export default function AdminPanelEnhanced() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("raffles");
+  const [raffleFilter, setRaffleFilter] = useState("pending");
   const [selectedRaffle, setSelectedRaffle] = useState<any>(null);
-  const [showReviewDialog, setShowReviewDialog] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<'approve' | 'reject' | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<number>(1);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [restrictionType, setRestrictionType] = useState<"none" | "temporary" | "permanent">("none");
+  const [restrictionEnd, setRestrictionEnd] = useState("");
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [deleteRaffleId, setDeleteRaffleId] = useState<string>("");
   const [bulkDeleteStatus, setBulkDeleteStatus] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<string>("raffles"); // Default tab only on initial load - mutations preserve current tab
-  const [raffleFilter, setRaffleFilter] = useState<string>("pending");
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<'approve' | 'reject' | null>(null);
+  const [editedMessageLink, setEditedMessageLink] = useState<string>("");
+
+
+
+
 
 
   // Forms
@@ -527,7 +545,7 @@ export default function AdminPanelEnhanced() {
 
   // Approve raffle mutation
   const approveRaffleMutation = useMutation({
-    mutationFn: async (data: { raffleId: string; level: number; reason?: string }) => {
+    mutationFn: async (data: { raffleId: string; level: number; reason?: string; messageUrl?: string }) => {
       const response = await fetch(`/api/raffles/${data.raffleId}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -535,7 +553,8 @@ export default function AdminPanelEnhanced() {
           status: 'approved',
           levelRequired: data.level,
           adminUserId: user?.id,
-          reason: data.reason
+          reason: data.reason,
+          messageUrl: data.messageUrl
         })
       });
       if (!response.ok) throw new Error('Failed to approve raffle');
@@ -559,7 +578,7 @@ export default function AdminPanelEnhanced() {
 
   // Reject raffle mutation
   const rejectRaffleMutation = useMutation({
-    mutationFn: async (data: { raffleId: string } & RejectionData) => {
+    mutationFn: async (data: { raffleId: string; messageUrl?: string } & RejectionData) => {
       const restriction = data.restrictionType !== "none" ? {
         type: data.restrictionType,
         start: data.restrictionStart,
@@ -573,7 +592,8 @@ export default function AdminPanelEnhanced() {
           status: 'rejected',
           reason: data.reason,
           restriction,
-          adminUserId: user?.id
+          adminUserId: user?.id,
+          messageUrl: data.messageUrl
         })
       });
       if (!response.ok) throw new Error('Failed to reject raffle');
@@ -781,17 +801,21 @@ export default function AdminPanelEnhanced() {
 
   const onLevelApprovalSubmit = (data: LevelApprovalData) => {
     if (!selectedRaffle) return;
+    const finalMessageUrl = editedMessageLink || selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl || "";
     approveRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
       level: data.level,
-      reason: data.reason
+      reason: data.reason,
+      messageUrl: finalMessageUrl
     });
   };
 
   const onRejectionSubmit = (data: RejectionData) => {
     if (!selectedRaffle) return;
+    const finalMessageUrl = editedMessageLink || selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl || "";
     rejectRaffleMutation.mutate({
       raffleId: selectedRaffle.id,
+      messageUrl: finalMessageUrl,
       ...data
     });
   };
@@ -918,7 +942,8 @@ export default function AdminPanelEnhanced() {
 
   return (
     <div className="app-container">
-      <div className="main-content p-4">
+
+      <div className="main-content p-4 overflow-y-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={`grid w-full mb-6 ${
             isKing ? 'grid-cols-4' : 
@@ -988,6 +1013,7 @@ export default function AdminPanelEnhanced() {
                   adminLevel={adminLevel}
                   setSelectedRaffle={setSelectedRaffle}
                   setShowReviewDialog={setShowReviewDialog}
+                  setEditedMessageLink={setEditedMessageLink}
                 />
               </CardContent>
             </Card>
@@ -1484,7 +1510,6 @@ export default function AdminPanelEnhanced() {
               <DialogDescription>
                 <div className="space-y-1">
                   <div>درخواست شماره: {selectedRaffle?.requestNumber}</div>
-                  <div>ارسال‌کننده: {selectedRaffle?.submitter?.telegramId || 'نامشخص'}</div>
                 </div>
               </DialogDescription>
             </DialogHeader>
@@ -1493,18 +1518,37 @@ export default function AdminPanelEnhanced() {
               <div className="space-y-6">
                 {/* Raffle Information */}
                 <div className="bg-telegram-bg-secondary dark:bg-telegram-bg-dark border border-telegram-border dark:border-telegram-border-dark p-4 rounded-lg">
-                  <h3 className="font-medium mb-2 text-telegram dark:text-telegram-dark">اطلاعات درخواست:</h3>
-                  <div className="flex items-center gap-2 mb-2">
-                    {selectedRaffle.prizeType === 'stars' && <Star className="w-4 h-4 star-icon" />}
-                    {selectedRaffle.prizeType === 'premium' && <Crown className="w-4 h-4 text-telegram-warning" />}
-                    {selectedRaffle.prizeType === 'mixed' && <Crown className="w-4 h-4 text-purple-500" />}
-                    <span className="font-medium text-telegram dark:text-telegram-dark">
-                      {selectedRaffle.prizeType === 'stars' && `${selectedRaffle.prizeValue} ستاره`}
-                      {selectedRaffle.prizeType === 'premium' && `${selectedRaffle.prizeValue} ماه پرمیوم`}
-                      {selectedRaffle.prizeType === 'mixed' && `${selectedRaffle.prizeValue} ستاره + پرمیوم`}
-                    </span>
+                  <h3 className="font-medium mb-3 text-telegram dark:text-telegram-dark">اطلاعات درخواست:</h3>
+                  
+                  {/* Submitter Information */}
+                  <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      ارسال‌کننده: {selectedRaffle?.submitter?.telegramId || 'نامشخص'} - {selectedRaffle?.submitter?.username || selectedRaffle?.submitter?.fullName || `${selectedRaffle?.submitter?.firstName || ''} ${selectedRaffle?.submitter?.lastName || ''}`.trim() || 'نامشخص'} - سطح {selectedRaffle?.submitter?.level || 'نامشخص'}
+                    </div>
                   </div>
 
+                  {/* Message Link */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">لینک پیام قرعه‌کشی:</label>
+                    <Input
+                      value={editedMessageLink || selectedRaffle?.messageUrl || selectedRaffle?.originalData?.messageUrl || ""}
+                      onChange={(e) => setEditedMessageLink(e.target.value)}
+                      placeholder="لینک پیام قرعه‌کشی..."
+                      className="w-full"
+                    />
+                    {(selectedRaffle?.messageUrl || selectedRaffle?.originalData?.messageUrl) && (
+                      <div className="mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(selectedRaffle.messageUrl || selectedRaffle.originalData?.messageUrl, '_blank')}
+                        >
+                          مشاهده لینک
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Action Selection */}
@@ -1657,6 +1701,7 @@ export default function AdminPanelEnhanced() {
                     onClick={() => {
                       setShowReviewDialog(false);
                       setSelectedAction(null);
+                      setEditedMessageLink("");
                     }}
                     className="flex-1"
                   >
@@ -1930,6 +1975,8 @@ export default function AdminPanelEnhanced() {
             </div>
           </DialogContent>
         </Dialog>
+
+
       </div>
     </div>
   );
